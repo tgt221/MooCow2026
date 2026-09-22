@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="MooCow Productions helps businesses turn real work, real moments, and real expertise into video and visual content that builds trust.">
+  <link rel="canonical" href="https://moocowtv.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="MooCow Productions — Video Production + Visual Content">
+  <meta property="og:description" content="Helping businesses be seen, understood, and trusted.">
+  <meta property="og:url" content="https://moocowtv.com/">
+  <meta property="og:image" content="https://moocowtv.com/frames/hero-jpg/frame_0001.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="MooCow Productions — Video Production + Visual Content">
+  <meta name="twitter:description" content="Helping businesses be seen, understood, and trusted.">
+  <meta name="twitter:image" content="https://moocowtv.com/frames/hero-jpg/frame_0001.jpg">
+  <title>MooCow Productions — Video Production + Visual Content</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css?v=20260805b">
+  <script>document.documentElement.classList.remove('no-js');document.documentElement.classList.add('js');</script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": ["LocalBusiness", "ProfessionalService"],
+        "@id": "https://moocowtv.com/#business",
+        "name": "MooCow Productions",
+        "url": "https://moocowtv.com/",
+        "image": "https://moocowtv.com/frames/hero-jpg/frame_0001.jpg",
+        "description": "Video production and visual content partner helping businesses be seen, understood, and trusted.",
+        "sameAs": [
+          "https://facebook.com/MooCowTv",
+          "https://instagram.com/moocow_ontv"
+        ]
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://moocowtv.com/#organization",
+        "name": "MooCow Productions",
+        "url": "https://moocowtv.com/"
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <div class="loader" id="loader" role="status" aria-live="polite" aria-label="Loading hero sequence">
+    <div class="loader__identity" aria-hidden="true"><span>MC</span><i></i></div>
+    <div class="loader__track"><span id="loaderBar"></span></div>
+    <div class="loader__meta"><span>Preparing the frame</span><span id="loaderPercent">0%</span></div>
+  </div>
+
+  <header class="site-header" id="siteHeader">
+    <a class="wordmark" href="#hero" aria-label="MooCow Productions home">
+      <span class="wordmark__mark" aria-hidden="true">MC</span>
+      <span class="wordmark__name">MooCow<br>Productions</span>
+    </a>
+    <nav class="desktop-nav" aria-label="Primary navigation">
+      <a href="#work">Work</a>
+      <a href="#services">Services</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+      <a class="nav-cta" href="#contact">Get in touch</a>
+    </nav>
+    <button class="menu-toggle" id="menuToggle" type="button" aria-expanded="false" aria-controls="mobileMenu">
+      <span class="sr-only">Open menu</span><span></span><span></span>
+    </button>
+  </header>
+
+  <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
+    <nav aria-label="Mobile navigation">
+      <a href="#work"><span>01</span>Work</a>
+      <a href="#services"><span>02</span>Services</a>
+      <a href="#about"><span>03</span>About</a>
+      <a href="#contact"><span>04</span>Contact</a>
+    </nav>
+    <p>Video production + visual content</p>
+  </div>
+
+  <main id="main">
+    <section class="hero" id="hero" aria-labelledby="heroTitle">
+      <div class="hero__sticky">
+        <canvas id="heroCanvas" aria-hidden="true"></canvas>
+        <video id="heroFallback" class="hero__fallback" src="/media/hero-fallback.mp4" muted loop playsinline preload="metadata" aria-hidden="true"></video>
+        <img id="heroStatic" class="hero__static" src="/frames/hero-2x/frame_0001.webp" alt="Matte black cinema camera illuminated by cool blue rim light">
+        <div class="hero__vignette" aria-hidden="true"></div>
+        <div class="hero__copy hero__copy--intro">
+          <p class="eyebrow">Video production <span>+</span> visual content</p>
+          <h1 id="heroTitle">MooCow<br><span>Productions</span></h1>
+        </div>
+        <div class="hero__copy hero__copy--resolve">
+          <p>Helping businesses be seen,<br>understood, and trusted.</p>
+        </div>
+        <div class="hero__chapter" aria-hidden="true"><span>00</span><i></i><b>Assembly / intent</b></div>
+        <div class="scroll-cue" id="scrollCue" aria-hidden="true"><span>Scroll to reveal</span><i></i></div>
+      </div>
+    </section>
+
+    <section class="positioning section-black" aria-labelledby="positioningTitle">
+      <div class="section-shell">
+        <p class="section-kicker" data-reveal><span>01</span> Proof of work</p>
+        <h2 id="positioningTitle" class="sr-only">How we make your work visible</h2>
+        <div class="positioning__lines">
+          <p data-line-reveal>We capture <em>the work.</em></p>
+          <p data-line-reveal>We shape <em>the story.</em></p>
+          <p data-line-reveal>We package <em>the content.</em></p>
+          <p data-line-reveal>And your business gets seen,<br><em>understood, and trusted.</em></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="services" id="services" aria-labelledby="servicesTitle">
+      <header class="section-intro section-shell">
+        <p class="section-kicker" data-reveal><span>02</span> What we do</p>
+        <h2 id="servicesTitle" data-reveal>Content with<br>a purpose.</h2>
+        <p data-reveal>Communicate clearly. Document your work.<br>Show up with credibility.</p>
+      </header>
+
+      <article class="service-lane" data-service="business">
+        <div class="service-lane__inner section-shell">
+          <div class="service-lane__index" data-reveal>01</div>
+          <div class="service-lane__copy">
+            <p class="eyebrow" data-reveal>Make the value clear</p>
+            <h3 data-reveal>Business &amp;<br>Corporate Video</h3>
+            <p data-reveal>Company overviews, brand stories, service explanations, training, executive messaging, recruitment and culture films.</p>
+          </div>
+          <!-- DROP-IN: service-business.mp4 or service-business.jpg, recommended 16:9 up to 1920x1080. -->
+          <div class="media-slot media-slot--wide" data-media-slot="service-business" aria-label="Business and corporate video media drop-in point">
+            <span>Strategy</span><i></i><span>Story</span><i></i><span>Trust</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="service-lane" data-service="social">
+        <div class="service-lane__inner section-shell service-lane__inner--reverse">
+          <div class="service-lane__index" data-reveal>02</div>
+          <div class="service-lane__copy">
+            <p class="eyebrow" data-reveal>Stay visible</p>
+            <h3 data-reveal>Social Media<br>Content</h3>
+            <p data-reveal>Reels, shorts, vertical video, carousels, and captioned cutdowns—scroll-stopping content built on your real work, not trends.</p>
+          </div>
+          <!-- DROP-IN: service-social.mp4 or service-social.jpg, recommended vertical 9:16 up to 1080x1920. -->
+          <div class="media-slot media-slot--portrait" data-media-slot="service-social" aria-label="Social media content media drop-in point">
+            <strong>Real work.</strong><strong>Real moments.</strong><strong>Real expertise.</strong>
+          </div>
+        </div>
+      </article>
+
+      <article class="service-lane" data-service="construction">
+        <div class="service-lane__inner section-shell">
+          <div class="service-lane__index" data-reveal>03</div>
+          <div class="service-lane__copy">
+            <p class="eyebrow" data-reveal>Capture what matters</p>
+            <h3 data-reveal>Construction &amp;<br>Documentation</h3>
+            <p data-reveal>Progress capture, site walkthroughs, before/during/after, inspection support, milestone and bid-support video.</p>
+          </div>
+          <!-- DROP-IN: service-construction.mp4 or .jpg, recommended 16:9 up to 1920x1080. -->
+          <div class="media-slot media-slot--technical" data-media-slot="service-construction" aria-label="Construction documentation media drop-in point">
+            <span>01 / Before</span><span>02 / During</span><span>03 / After</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="service-lane" data-service="management">
+        <div class="service-lane__inner section-shell service-lane__inner--reverse">
+          <div class="service-lane__index" data-reveal>04</div>
+          <div class="service-lane__copy">
+            <p class="eyebrow" data-reveal>Consistency, handled</p>
+            <h3 data-reveal>Social Media<br>Management</h3>
+            <p data-reveal>Calendars, posting, community management, and ad creative—social taken off your plate entirely.</p>
+          </div>
+          <!-- DROP-IN: service-management.mp4 or .jpg, recommended 4:5 or 16:9. -->
+          <div class="media-slot media-slot--schedule" data-media-slot="service-management" aria-label="Social media management media drop-in point">
+            <span>Plan</span><span>Publish</span><span>Manage</span><span>Measure</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="service-lane" data-service="photo">
+        <div class="service-lane__inner section-shell">
+          <div class="service-lane__index" data-reveal>05</div>
+          <div class="service-lane__copy">
+            <p class="eyebrow" data-reveal>Finish with intention</p>
+            <h3 data-reveal>Photography &amp;<br>Post-Production</h3>
+            <p data-reveal>Headshots, event and project photography, editing, motion graphics, color, and multi-format delivery.</p>
+          </div>
+          <!-- DROP-IN: service-photo.jpg, recommended 3:2 up to 2000px. -->
+          <div class="media-slot media-slot--post" data-media-slot="service-photo" aria-label="Photography and post-production media drop-in point">
+            <span>Capture</span><span>Edit</span><span>Color</span><span>Deliver</span>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="shift section-black" aria-labelledby="shiftTitle">
+      <div class="section-shell">
+        <p class="section-kicker" data-reveal><span>03</span> The shift</p>
+        <h2 id="shiftTitle" data-reveal>Credibility,<br>made visible.</h2>
+        <div class="shift__grid">
+          <div class="shift__column shift__column--before" data-reveal>
+            <p class="eyebrow">Before</p>
+            <ul>
+              <li>Doing great work, but nobody sees it.</li>
+              <li>Inconsistent visuals.</li>
+              <li>Hard to explain your value.</li>
+              <li>Projects undocumented.</li>
+              <li>Looking smaller online than you actually are.</li>
+            </ul>
+          </div>
+          <div class="shift__column shift__column--after" data-reveal>
+            <p class="eyebrow">After</p>
+            <ul>
+              <li>Professional assets you own.</li>
+              <li>Clearer messaging.</li>
+              <li>A documented record of your work.</li>
+              <li>Content for your site, socials, proposals, and sales.</li>
+              <li>A brand that matches the quality of the work.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="audience" aria-labelledby="audienceTitle">
+      <div class="section-shell">
+        <p class="section-kicker" data-reveal><span>04</span> Who we work with</p>
+        <h2 id="audienceTitle" class="sr-only">Businesses and organizations we work with</h2>
+        <ol class="audience__list">
+          <li data-reveal><span>01</span>Small &amp; local service businesses</li>
+          <li data-reveal><span>02</span>Construction, contractors &amp; trades</li>
+          <li data-reveal><span>03</span>Events, organizations &amp; nonprofits</li>
+          <li data-reveal><span>04</span>Corporate &amp; professional services</li>
+          <li data-reveal><span>05</span>Real estate &amp; home-service professionals</li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="work" id="work" aria-labelledby="workTitle">
+      <header class="section-intro section-shell">
+        <p class="section-kicker" data-reveal><span>05</span> The work</p>
+        <h2 id="workTitle" data-reveal>Selected<br>proof.</h2>
+        <p data-reveal>Real work becomes visual proof—built to live well beyond the day it was captured.</p>
+      </header>
+      <div class="work__gallery section-shell">
+        <!-- DROP-INS: work-01 through work-06; silent MP4 loops or JPG, up to 1920x1080. -->
+        <figure class="work-piece work-piece--one" data-reveal data-media-slot="work-01">
+          <div class="work-piece__void"><span>01</span><i></i><b>Tell the story</b></div>
+          <figcaption><span>Brand film</span><span>Business / Story / Trust</span></figcaption>
+        </figure>
+        <figure class="work-piece work-piece--two" data-reveal data-media-slot="work-02">
+          <div class="work-piece__void"><span>02</span><i></i><b>Document the work</b></div>
+          <figcaption><span>Project documentation</span><span>Process / Progress / Proof</span></figcaption>
+        </figure>
+        <figure class="work-piece work-piece--three" data-reveal data-media-slot="work-03">
+          <div class="work-piece__void"><span>03</span><i></i><b>Make it clear</b></div>
+          <figcaption><span>Service overview</span><span>Explain / Demonstrate / Convert</span></figcaption>
+        </figure>
+        <figure class="work-piece work-piece--four" data-reveal data-media-slot="work-04">
+          <div class="work-piece__void"><span>04</span><i></i><b>Capture the moment</b></div>
+          <figcaption><span>Event capture</span><span>People / Energy / Memory</span></figcaption>
+        </figure>
+        <figure class="work-piece work-piece--five" data-reveal data-media-slot="work-05">
+          <div class="work-piece__void"><span>05</span><i></i><b>Build the system</b></div>
+          <figcaption><span>Content series</span><span>One shoot / Many assets</span></figcaption>
+        </figure>
+        <figure class="work-piece work-piece--six" data-reveal data-media-slot="work-06">
+          <div class="work-piece__void"><span>06</span><i></i><b>Show the expertise</b></div>
+          <figcaption><span>Executive message</span><span>Authority / Clarity / Credibility</span></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="repurpose" aria-labelledby="repurposeTitle">
+      <div class="repurpose__glow" aria-hidden="true"></div>
+      <div class="section-shell">
+        <p class="section-kicker" data-reveal><span>06</span> One shoot, many assets</p>
+        <h2 id="repurposeTitle" data-reveal>One day in.<br><em>A full system out.</em></h2>
+        <div class="repurpose__stream" aria-label="Assets created from one shoot">
+          <span data-reveal>Website video</span><i></i>
+          <span data-reveal>Reels</span><i></i>
+          <span data-reveal>Shorts</span><i></i>
+          <span data-reveal>Testimonials</span><i></i>
+          <span data-reveal>Sales assets</span><i></i>
+          <span data-reveal>Proposal visuals</span><i></i>
+          <span data-reveal>Training material</span><i></i>
+          <span data-reveal>Photography</span><i></i>
+          <span data-reveal>Email content</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="about section-black" id="about" aria-labelledby="aboutTitle">
+      <div class="section-shell about__grid">
+        <div>
+          <p class="section-kicker" data-reveal><span>07</span> About MooCow</p>
+          <h2 id="aboutTitle" data-reveal>Built close<br>to the work.</h2>
+        </div>
+        <div class="about__copy">
+          <p class="about__lead" data-reveal>Over a decade of video production and visual storytelling, built on one belief: every brand deserves to be seen, heard, and remembered.</p>
+          <p data-reveal>Hands-on attention stays with every project—from the first conversation through the final delivery. You get a partner who understands what the work needs to do, not a vendor handing off files.</p>
+          <div class="about__belief" data-reveal><span>10+</span><p>Years turning real work, real moments, and real expertise into visual proof.</p></div>
+        </div>
+        <!-- DROP-IN: about-portrait.jpg, recommended portrait 4:5 up to 1600px. -->
+      </div>
+    </section>
+
+    <section class="contact" id="contact" aria-labelledby="contactTitle">
+      <div class="contact__glow" aria-hidden="true"></div>
+      <div class="section-shell">
+        <p class="section-kicker" data-reveal><span>08</span> Start a project</p>
+        <h2 id="contactTitle" data-reveal>Let's make your work<br><em>impossible to ignore.</em></h2>
+        <div class="contact__layout">
+          <p class="contact__aside" data-reveal>Tell us what the business needs to communicate, document, or put into motion. We’ll start there.</p>
+          <form id="contactForm" class="contact-form" novalidate data-reveal>
+            <div class="form-grid">
+              <div class="field">
+                <label for="name">Name <span aria-hidden="true">*</span></label>
+                <input id="name" name="name" type="text" autocomplete="name" required>
+                <small class="field-error" id="nameError"></small>
+              </div>
+              <div class="field">
+                <label for="business">Business <span aria-hidden="true">*</span></label>
+                <input id="business" name="business" type="text" autocomplete="organization" required>
+                <small class="field-error" id="businessError"></small>
+              </div>
+              <div class="field">
+                <label for="email">Email <span aria-hidden="true">*</span></label>
+                <input id="email" name="email" type="email" autocomplete="email" required>
+                <small class="field-error" id="emailError"></small>
+              </div>
+              <div class="field">
+                <label for="phone">Phone <span>(optional)</span></label>
+                <input id="phone" name="phone" type="tel" autocomplete="tel">
+                <small class="field-error" id="phoneError"></small>
+              </div>
+              <div class="field">
+                <label for="projectType">Project type <span aria-hidden="true">*</span></label>
+                <select id="projectType" name="projectType" required>
+                  <option value="">Choose one</option>
+                  <option>Business video</option>
+                  <option>Social content</option>
+                  <option>Construction documentation</option>
+                  <option>Event capture</option>
+                  <option>Photography</option>
+                  <option>Not sure yet</option>
+                </select>
+                <small class="field-error" id="projectTypeError"></small>
+              </div>
+              <div class="field">
+                <label for="budget">Monthly marketing budget <span aria-hidden="true">*</span></label>
+                <select id="budget" name="budget" required>
+                  <option value="">Choose one</option>
+                  <option>Under $3k</option>
+                  <option>$3–5k</option>
+                  <option>$5–10k</option>
+                  <option>$10k+</option>
+                </select>
+                <small class="field-error" id="budgetError"></small>
+              </div>
+              <div class="field field--full">
+                <label for="message">Message <span aria-hidden="true">*</span></label>
+                <textarea id="message" name="message" rows="4" required></textarea>
+                <small class="field-error" id="messageError"></small>
+              </div>
+            </div>
+            <div class="honeypot" aria-hidden="true">
+              <label for="website">Website</label><input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
+            </div>
+            <div class="form-actions">
+              <p id="formStatus" class="form-status" role="status" aria-live="polite"></p>
+              <button class="primary-button" type="submit"><span>Send project note</span><i aria-hidden="true">↗</i></button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="section-shell site-footer__top">
+      <a class="wordmark wordmark--footer" href="#hero" aria-label="MooCow Productions home">
+        <span class="wordmark__mark" aria-hidden="true">MC</span>
+        <span class="wordmark__name">MooCow<br>Productions</span>
+      </a>
+      <p>Communicate clearly.<br>Document your work.<br>Show up with credibility.</p>
+      <nav aria-label="Social links">
+        <a href="https://facebook.com/MooCowTv" target="_blank" rel="noreferrer">Facebook <span>↗</span></a>
+        <a href="https://instagram.com/moocow_ontv" target="_blank" rel="noreferrer">Instagram <span>↗</span></a>
+        <a href="https://youtube.com/@MooCowTv" target="_blank" rel="noreferrer">YouTube <span>↗</span></a>
+      </nav>
+    </div>
+    <div class="section-shell site-footer__bottom">
+      <span>© <span id="year"></span> MooCow Productions</span>
+      <span>Video production + visual content</span>
+      <a href="#hero">Back to top ↑</a>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.11/dist/lenis.min.js" defer></script>
+  <script src="/app.js?v=20260805c" defer></script>
+</body>
+</html>

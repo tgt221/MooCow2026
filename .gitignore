@@ -1,0 +1,15 @@
+node_modules/
+.env
+assets-source/
+*.log
+.server-*.log
+.DS_Store
+Thumbs.db
+qa-screenshots/
+
+# Raw working assets supplied outside the deployable site.
+MooCow4k camera assemble-website-frames/
+MooCow4k camera assemble-website-frames.zip
+*.pdf
+/*.mp4
+/Camera*.png
