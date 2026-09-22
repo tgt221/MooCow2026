@@ -13,3 +13,6 @@ MooCow4k camera assemble-website-frames.zip
 *.pdf
 /*.mp4
 /Camera*.png
+
+# Old local backups — never deploy.
+_backup-before-preview-sections/

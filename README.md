@@ -31,8 +31,46 @@ Copy `.env.example` to `.env` for local use (or set the values in your process m
 | `SMTP_PASS` | SMTP password or app password |
 | `CONTACT_TO` | Inbox that receives project inquiries |
 | `PORT` | Local port only; Hostinger supplies this automatically |
+| `NODE_ENV` | Set to `production` on Hostinger. Turns on the `upgrade-insecure-requests` security header (off locally, where it breaks links between pages on `http://localhost`) and the strict contact-form behaviour |
 
 Never commit `.env`.
+
+## Service pages
+
+The four "Content details & investment" pages live at `/services/<slug>/` and are **generated** — don't edit their HTML by hand.
+
+1. Edit copy or prices in `tools/service-pages.data.js`.
+2. Run `npm run build:pages`.
+3. Commit the regenerated `public/services/` files (Hostinger never runs a build).
+
+The pricing in the data file is a **proposal** drafted from 2026 market research. On `localhost` a yellow "Proposed pricing" note appears above each rate card; it never shows on the live site, so review the numbers before you publish.
+
+Old WordPress URLs (`/corporate/`, `/socialmediacontent/`, `/construction/`, `/socialmedia2`, `/about/`, `/contact/`, `/portfolio/`, `/home/`) permanently redirect (301) to their new homes — see `legacyRedirects` in `server.js`. Keep these after WordPress is retired: they carry the old pages' search ranking.
+
+Each "Choose …" button links to `/?service=…&package=…#contact`, which ticks the matching service on the call sheet and pre-fills the message. The `chip` value in the data file must exactly match a call-sheet checkbox value.
+
+## Hero video
+
+The hero plays the camera-explode clip once, then crossfades into the looping showreel. Everything is self-hosted in `public/media/` — nothing loads from the old WordPress site.
+
+| Screen | Camera clip | Showreel |
+| --- | --- | --- |
+| Desktop | `hero-fallback.mp4` (1080p, 6.6 MB) | `reel-1080.mp4` (1080p, ~19 MB) |
+| Phones, Data Saver, 2G/3G | `camera-720.mp4` (720p, ~1.8 MB) | `reel-720.mp4` (720p, ~8 MB) |
+
+`app.js` picks the files by screen size and connection. All files are H.264 High / yuv420p / no audio / faststart — the profile every iOS and Android browser will autoplay inline.
+
+**Autoplay refused** (iPhone Low Power Mode, Android Data Saver): the hero keeps the camera still on screen and starts playback on the visitor's first tap. **Page opened in a background tab:** Chrome aborts the first play() to save power; the hero resumes as soon as the tab is shown. The hero only crossfades to the showreel once the showreel is actually playing, so it is never left black.
+
+Rebuild the web versions after replacing a master in `assets-source/` (`hero.mp4`, `showreel-master.mp4`):
+
+```bash
+bash tools/build-hero-video.sh
+```
+
+`/media` is served with a one-year immutable cache, so **give a re-encoded file a new name** (and update `data-src-*` in `index.html`) or returning visitors will keep the old one.
+
+Local QA: `?qa-block-autoplay=1` refuses playback until the first tap, reproducing Low Power Mode.
 
 ## Rebuild the hero sequence
 
@@ -76,9 +114,9 @@ For video, add `muted loop playsinline` and the `data-lazy-video data-src="/medi
 2. In Hostinger, create a **Node.js Web App** and connect the GitHub repository.
 3. Select Node.js 18 or newer.
 4. Set the start command to `npm start` (equivalent to `node server.js`).
-5. Add `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, and `CONTACT_TO` in Hostinger’s environment-variable panel.
+5. Add `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `CONTACT_TO`, and `NODE_ENV=production` in Hostinger’s environment-variable panel.
 6. Do not hardcode or override `PORT`; Hostinger injects it.
-7. Deploy. The generated frame tiers are committed, so ffmpeg is not required on Hostinger for this version.
+7. Deploy. All web media in `public/` is committed (largest file ~19 MB, well under GitHub's 100 MB limit), so ffmpeg is not required on Hostinger. `assets-source/` is git-ignored and never deployed — nothing on the live site may point at it.
 8. Verify the public contact form after deployment; production deliberately returns a generic unavailable state if SMTP is not configured.
 
 Static `/frames` and `/media` responses use immutable one-year cache headers. HTML is served with `no-cache`, while CSS and JavaScript use one-hour caching plus versioned URLs.
@@ -87,6 +125,5 @@ Static `/frames` and `/media` responses use immutable one-year cache headers. HT
 
 These query parameters work only on `localhost`, `127.0.0.1`, or `::1`:
 
-- `?qa-dpr=2` exercises the exact 2× canvas backing-store path.
 - `?qa-reduced-motion=1` mirrors the reduced-motion path without changing OS settings.
-- `?qa-force-fallback=1` forces the H.264 fallback video and loader unlock path.
+- `?qa-block-autoplay=1` refuses video playback until the first tap, like iPhone Low Power Mode / Android Data Saver.

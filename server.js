@@ -22,11 +22,15 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+      // All media is self-hosted now; nothing loads from the old WordPress site.
       imgSrc: ["'self'", 'data:', 'blob:'],
       mediaSrc: ["'self'", 'blob:'],
       connectSrc: ["'self'"],
       frameAncestors: ["'none'"],
-      upgradeInsecureRequests: []
+      // Production only. On http://localhost this rewrites same-origin page
+      // navigations to https://localhost, which doesn't exist, so every link
+      // to another page (e.g. /services/…) fails in local testing.
+      upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null
     }
   },
   crossOriginResourcePolicy: { policy: 'same-origin' }
@@ -34,6 +38,25 @@ app.use(helmet({
 app.use(compression());
 app.use(express.json({ limit: '32kb' }));
 app.use(express.urlencoded({ extended: false, limit: '32kb' }));
+
+// Old WordPress URLs → their new homes. 301 (permanent) so search engines pass
+// the old pages' ranking to the new ones, and shared links keep working after
+// WordPress is retired. Express's default non-strict routing means each entry
+// matches with or without a trailing slash.
+const legacyRedirects = {
+  '/corporate': '/services/business-content/',
+  '/socialmediacontent': '/services/social-media-content/',
+  '/construction': '/services/construction/',
+  '/socialmedia2': '/services/social-media-management/',
+  '/socialmedia': '/services/social-media-management/',
+  '/home': '/',
+  '/about': '/#about',
+  '/portfolio': '/#work',
+  '/contact': '/#contact'
+};
+for (const [from, to] of Object.entries(legacyRedirects)) {
+  app.get(from, (req, res) => res.redirect(301, to));
+}
 
 app.use('/frames', express.static(path.join(publicDir, 'frames'), {
   immutable: true,
@@ -45,6 +68,8 @@ app.use('/media', express.static(path.join(publicDir, 'media'), {
   maxAge: '1y',
   fallthrough: true
 }));
+// Note: assets-source/ holds raw masters. It is git-ignored and must never be
+// served — every file the site uses is built into public/ (tools/build-*.sh).
 app.use(express.static(publicDir, {
   maxAge: '1h',
   setHeaders(res, filePath) {
@@ -78,24 +103,35 @@ function contactRateLimit(req, res, next) {
   return next();
 }
 
+// The "call sheet" form. `nickname` is the hidden honeypot — it must not be
+// called `website`, because the call sheet has a real Website field.
 app.post('/api/contact', contactRateLimit, async (req, res) => {
+  const rawServices = Array.isArray(req.body.services)
+    ? req.body.services
+    : (req.body.services ? [req.body.services] : []);
+
   const body = {
-    name: clean(req.body.name, 120),
-    business: clean(req.body.business, 160),
+    first: clean(req.body.first, 80),
+    last: clean(req.body.last, 80),
     email: clean(req.body.email, 200),
     phone: clean(req.body.phone, 80),
-    projectType: clean(req.body.projectType, 120),
+    company: clean(req.body.company, 160),
+    site: clean(req.body.site, 200),
+    services: rawServices.slice(0, 12).map((s) => clean(s, 60)).filter(Boolean),
     budget: clean(req.body.budget, 80),
     message: clean(req.body.message, 3000),
-    website: clean(req.body.website, 200)
+    heard: clean(req.body.heard, 80),
+    nickname: clean(req.body.nickname, 200)
   };
+  const fullName = `${body.first} ${body.last}`.trim();
+  const thanks = `Got it, ${body.first || 'thanks'} — we'll be in touch shortly.`;
 
-  if (body.website) {
-    return res.json({ ok: true, message: 'Thanks. Your project note has been received.' });
+  if (body.nickname) {
+    return res.json({ ok: true, message: thanks });
   }
 
-  if (!body.name || !body.business || !body.email || !body.projectType || !body.budget || !body.message || !validEmail(body.email)) {
-    return res.status(400).json({ ok: false, message: 'Please complete every required field with a valid email address.' });
+  if (!body.first || !body.last || !validEmail(body.email)) {
+    return res.status(400).json({ ok: false, message: 'Please add your first and last name and a valid email address.' });
   }
 
   const requiredEnv = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'CONTACT_TO'];
@@ -106,8 +142,8 @@ app.post('/api/contact', contactRateLimit, async (req, res) => {
       return res.status(503).json({ ok: false, message: 'The contact service is temporarily unavailable. Please email us directly.' });
     }
 
-    console.info(`[contact:dev-stub] ${body.name} <${body.email}> — ${body.projectType}`);
-    return res.json({ ok: true, message: 'Thanks. Your project note has been received.', devMode: true });
+    console.info(`[contact:dev-stub] ${fullName} <${body.email}> — ${body.services.join(', ') || 'no services selected'}`);
+    return res.json({ ok: true, message: thanks, devMode: true });
   }
 
   try {
@@ -122,25 +158,27 @@ app.post('/api/contact', contactRateLimit, async (req, res) => {
     });
 
     const lines = [
-      `Name: ${body.name}`,
-      `Business: ${body.business}`,
+      `Name: ${fullName}`,
+      `Company: ${body.company || 'Not provided'}`,
       `Email: ${body.email}`,
       `Phone: ${body.phone || 'Not provided'}`,
-      `Project type: ${body.projectType}`,
-      `Monthly marketing budget: ${body.budget}`,
+      `Website: ${body.site || 'Not provided'}`,
+      `Services: ${body.services.join(', ') || 'None selected'}`,
+      `Monthly marketing budget: ${body.budget || 'Not selected'}`,
+      `Heard about us via: ${body.heard || 'Not selected'}`,
       '',
-      body.message
+      body.message || '(No message)'
     ];
 
     await transporter.sendMail({
       from: process.env.SMTP_USER,
       to: process.env.CONTACT_TO,
       replyTo: body.email,
-      subject: `New MooCow inquiry — ${body.business}`,
+      subject: `New MooCow call sheet — ${body.company || fullName}`,
       text: lines.join('\n')
     });
 
-    return res.json({ ok: true, message: 'Thanks. Your project note has been received.' });
+    return res.json({ ok: true, message: thanks });
   } catch (error) {
     console.error('[contact:error]', error?.message || 'Unknown SMTP error');
     return res.status(502).json({ ok: false, message: 'We could not send your message right now. Please try again or email us directly.' });

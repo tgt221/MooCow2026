@@ -4,15 +4,14 @@
   const qaParams = new URLSearchParams(window.location.search);
   const localQa = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches || (localQa && qaParams.get('qa-reduced-motion') === '1');
+
   const body = document.body;
   const hero = document.getElementById('hero');
-  const canvas = document.getElementById('heroCanvas');
-  const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+  const heroCamera = document.getElementById('heroCamera');
+  const heroReel = document.getElementById('heroReel');
   const loader = document.getElementById('loader');
   const loaderBar = document.getElementById('loaderBar');
   const loaderPercent = document.getElementById('loaderPercent');
-  const fallbackVideo = document.getElementById('heroFallback');
-  const heroStatic = document.getElementById('heroStatic');
   const siteHeader = document.getElementById('siteHeader');
   const scrollCue = document.getElementById('scrollCue');
   const menuToggle = document.getElementById('menuToggle');
@@ -20,85 +19,14 @@
 
   document.documentElement.classList.toggle('reduced-motion', reducedMotion);
 
-  const state = {
-    tier: null,
-    blobs: [],
-    bitmaps: new Map(),
-    decoding: new Map(),
-    frameCount: 0,
-    targetFrame: 0,
-    smoothFrame: 0,
-    paintedFrame: -1,
-    lastProgress: 0,
-    resizeTimer: 0,
-    lenis: null,
-    ready: false,
-    fallback: false,
-    cacheLimit: 34
-  };
-
+  const state = { lenis: null, ready: false, handedOff: false };
   const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
-  const smoothstep = (edge0, edge1, value) => {
-    const x = clamp((value - edge0) / (edge1 - edge0));
-    return x * x * (3 - 2 * x);
-  };
-  const frameUrl = (tier, number) => `/frames/${tier.path}/frame_${String(number).padStart(4, '0')}.${tier.extension}`;
 
-  function supportsWebP() {
-    const test = document.createElement('canvas');
-    return test.toDataURL('image/webp').startsWith('data:image/webp');
-  }
-
-  function chooseTier() {
-    const webp = supportsWebP();
-    if (window.innerWidth < 768 && webp) {
-      return { path: 'hero-sm', count: 125, extension: 'webp', nativeUpgrade: false };
-    }
-    if (!webp) {
-      return { path: 'hero-jpg', count: 250, extension: 'jpg', nativeUpgrade: false };
-    }
-    return {
-      path: 'hero',
-      count: 250,
-      extension: 'webp',
-      nativeUpgrade: window.innerWidth >= 1280 && (window.devicePixelRatio || 1) >= 1.5
-    };
-  }
-
-  async function fetchSequence(tier, onProgress = () => {}) {
-    const blobs = new Array(tier.count);
-    let cursor = 0;
-    let completed = 0;
-    let failed = 0;
-    const workers = Math.min(10, tier.count);
-
-    async function worker() {
-      while (cursor < tier.count) {
-        const index = cursor++;
-        try {
-          const response = await fetch(frameUrl(tier, index + 1), { cache: 'force-cache' });
-          if (!response.ok) throw new Error(`Frame ${index + 1}: HTTP ${response.status}`);
-          blobs[index] = await response.blob();
-        } catch (error) {
-          failed += 1;
-          console.warn('[hero:preload]', error.message);
-        } finally {
-          completed += 1;
-          onProgress(completed / tier.count);
-        }
-      }
-    }
-
-    await Promise.all(Array.from({ length: workers }, worker));
-    if (failed > 0) throw new Error(`${failed} hero frame${failed === 1 ? '' : 's'} failed to load`);
-    return blobs;
-  }
-
+  /* ---------- Loader ---------- */
   function setLoaderProgress(progress) {
     const safe = clamp(progress);
-    const percent = Math.round(safe * 100);
-    loaderBar.style.transform = `scaleX(${safe})`;
-    loaderPercent.textContent = `${percent}%`;
+    if (loaderBar) loaderBar.style.transform = `scaleX(${safe})`;
+    if (loaderPercent) loaderPercent.textContent = `${Math.round(safe * 100)}%`;
   }
 
   function unlockSite() {
@@ -106,139 +34,190 @@
     state.ready = true;
     setLoaderProgress(1);
     body.classList.add('is-ready');
-    window.setTimeout(() => loader.classList.add('is-complete'), 260);
+    window.setTimeout(() => loader && loader.classList.add('is-complete'), 260);
     initLenis();
+    jumpToHash();
     handleScroll();
   }
 
-  function activateFallback(reason) {
-    if (state.ready) return;
-    console.warn('[hero:fallback]', reason);
-    state.fallback = true;
-    hero.classList.add('is-fallback');
-    fallbackVideo.play().catch(() => {});
-    unlockSite();
+  // Arriving from a service page on /#contact (or any /#section): the page is
+  // locked behind the loader while it opens, so the browser's own anchor jump
+  // is lost. Do it once the site is unlocked.
+  function jumpToHash() {
+    if (!location.hash || location.hash.length < 2) return;
+    let target = null;
+    try { target = document.querySelector(location.hash); } catch { return; }
+    if (!target) return;
+    window.requestAnimationFrame(() => {
+      if (state.lenis) state.lenis.scrollTo(target, { immediate: true });
+      else target.scrollIntoView();
+    });
   }
 
-  async function decodeBlob(blob) {
-    try {
-      return await createImageBitmap(blob, { premultiplyAlpha: 'none', colorSpaceConversion: 'default' });
-    } catch {
-      return createImageBitmap(blob);
+  /* ---------- Hero: camera explode -> showreel ---------- */
+  // Phones and data-saver / slow connections get the 720p files (~2 MB camera,
+  // ~8 MB reel) instead of the 1080p ones.
+  const connection = navigator.connection || {};
+  const useSmallMedia = window.matchMedia('(max-width: 900px)').matches
+    || connection.saveData === true
+    || /2g|3g/.test(connection.effectiveType || '');
+
+  // Local QA: ?qa-block-autoplay=1 refuses play() until the first tap, exactly
+  // like iOS Low Power Mode / Android Data Saver.
+  const qaBlockAutoplay = localQa && qaParams.get('qa-block-autoplay') === '1';
+  let userGestured = false;
+  let tapArmed = false;
+
+  function pickSource(video) {
+    if (!video) return;
+    const src = useSmallMedia ? video.dataset.srcSmall : video.dataset.srcLarge;
+    if (src && video.getAttribute('src') !== src) video.src = src;
+  }
+
+  function tryPlay(video) {
+    if (qaBlockAutoplay && !userGestured) {
+      return Promise.reject(new DOMException('Autoplay refused (QA)', 'NotAllowedError'));
     }
+    try { return Promise.resolve(video.play()); } catch (error) { return Promise.reject(error); }
   }
 
-  function trimBitmapCache(protectedIndex) {
-    if (state.bitmaps.size <= state.cacheLimit) return;
-    const keys = [...state.bitmaps.keys()];
-    for (const key of keys) {
-      if (state.bitmaps.size <= state.cacheLimit) break;
-      if (Math.abs(key - protectedIndex) <= 4) continue;
-      state.bitmaps.get(key)?.close?.();
-      state.bitmaps.delete(key);
+  // When a phone refuses autoplay, the hero keeps showing the camera still and
+  // playback starts on the visitor's first tap or key press (a real gesture is
+  // what browsers require — scrolling doesn't count).
+  function armTapToPlay() {
+    if (tapArmed) return;
+    tapArmed = true;
+    const events = ['pointerdown', 'touchend', 'keydown'];
+    const resume = () => {
+      events.forEach((type) => window.removeEventListener(type, resume, true));
+      tapArmed = false;
+      userGestured = true;
+      if (heroCamera && !heroCamera.ended && !hero.classList.contains('camera-failed')) {
+        tryPlay(heroCamera).catch(() => {});
+      } else {
+        handOffToReel();
+      }
+    };
+    events.forEach((type) => window.addEventListener(type, resume, { capture: true, passive: true }));
+  }
+
+  function handOffToReel() {
+    if (state.handedOff || !heroReel) return;
+    state.handedOff = true;
+    heroReel.preload = 'auto';
+    pickSource(heroReel);
+    // Crossfade only once the reel is genuinely putting frames on screen. If it
+    // can't play, the camera's last frame (or its poster) stays up — the hero
+    // is never left black.
+    heroReel.addEventListener('playing', () => hero.classList.add('is-reel'), { once: true });
+    tryPlay(heroReel).catch(() => {
+      state.handedOff = false;
+      armTapToPlay();
+    });
+  }
+
+  function initHero() {
+    // Service pages have no video stage — just open the site.
+    if (!hero) {
+      unlockSite();
+      return;
     }
-  }
+    // Fade the copy in once the stage is up.
+    window.requestAnimationFrame(() => hero.classList.add('is-live'));
+    pickSource(heroCamera);
 
-  async function ensureBitmap(index) {
-    if (state.bitmaps.has(index)) {
-      const bitmap = state.bitmaps.get(index);
-      state.bitmaps.delete(index);
-      state.bitmaps.set(index, bitmap);
-      return bitmap;
+    if (reducedMotion || !heroCamera) {
+      // No motion (or no camera clip): go straight to the looping reel.
+      handOffToReel();
+      unlockSite();
+      return;
     }
-    if (state.decoding.has(index)) return state.decoding.get(index);
-    if (!state.blobs[index]) return null;
 
-    const pending = decodeBlob(state.blobs[index])
-      .then((bitmap) => {
-        state.decoding.delete(index);
-        state.bitmaps.set(index, bitmap);
-        trimBitmapCache(index);
-        return bitmap;
-      })
-      .catch((error) => {
-        state.decoding.delete(index);
-        console.warn(`[hero:decode:${index + 1}]`, error.message);
-        return null;
-      });
-    state.decoding.set(index, pending);
-    return pending;
+    let progressTimer = 0;
+    const startProgress = () => {
+      let p = 0;
+      progressTimer = window.setInterval(() => {
+        p = Math.min(0.92, p + 0.08);
+        setLoaderProgress(p);
+      }, 90);
+    };
+    startProgress();
+
+    const reveal = () => {
+      window.clearInterval(progressTimer);
+      unlockSite();
+    };
+
+    // When the camera clip can play, drop the loader and let it run.
+    heroCamera.addEventListener('canplay', reveal, { once: true });
+    heroCamera.addEventListener('loadeddata', reveal, { once: true });
+
+    // When the explode finishes, crossfade to the showreel.
+    heroCamera.addEventListener('ended', handOffToReel, { once: true });
+
+    // Start buffering the reel while the camera plays so the handoff is seamless.
+    heroCamera.addEventListener('playing', () => {
+      heroReel.preload = 'auto';
+      pickSource(heroReel);
+    }, { once: true });
+
+    // If the camera clip is missing or can't decode, go straight to the reel.
+    heroCamera.addEventListener('error', () => {
+      hero.classList.add('camera-failed');
+      reveal();
+      handOffToReel();
+    }, { once: true });
+
+    // Safety nets so the site never gets stuck behind the loader.
+    window.setTimeout(reveal, 4000);
+    window.setTimeout(() => { if (!state.handedOff && !tapArmed) handOffToReel(); }, 18000);
+
+    tryPlay(heroCamera).catch((error) => {
+      reveal();
+      // NotSupportedError = this clip genuinely can't play here: use the reel.
+      // Anything else is a refusal (NotAllowedError: Low Power Mode / Data
+      // Saver) or an interruption (AbortError: the page loaded in a background
+      // tab and Chrome paused silent video to save power). Neither means the
+      // clip is broken — keep the camera still up and retry on a tap or as
+      // soon as the page is actually on screen.
+      if (error && error.name === 'NotSupportedError') handOffToReel();
+      else armTapToPlay();
+    });
+
+    resumeWhenVisible();
   }
 
-  function sizeCanvas() {
-    const qaDpr = localQa ? Number.parseFloat(qaParams.get('qa-dpr')) : 0;
-    const dpr = Math.min(qaDpr || window.devicePixelRatio || 1, 2);
-    const cssWidth = window.innerWidth;
-    const cssHeight = window.innerHeight;
-    canvas.width = Math.round(cssWidth * dpr);
-    canvas.height = Math.round(cssHeight * dpr);
-    canvas.style.width = `${cssWidth}px`;
-    canvas.style.height = `${cssHeight}px`;
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-    state.paintedFrame = -1;
+  // A page opened in a background tab has its first play() aborted. When the
+  // visitor switches to it, pick up wherever the hero should be.
+  function resumeWhenVisible() {
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) return;
+      if (state.handedOff) {
+        if (heroReel.paused) tryPlay(heroReel).catch(() => {});
+      } else if (heroCamera.ended || hero.classList.contains('camera-failed')) {
+        handOffToReel();
+      } else if (heroCamera.paused) {
+        tryPlay(heroCamera).catch(() => armTapToPlay());
+      }
+    });
   }
 
-  function drawBitmap(bitmap, index) {
-    if (!bitmap || state.fallback) return;
-    const scale = Math.max(canvas.width / bitmap.width, canvas.height / bitmap.height);
-    const drawWidth = Math.round(bitmap.width * scale);
-    const drawHeight = Math.round(bitmap.height * scale);
-    const x = Math.round((canvas.width - drawWidth) / 2);
-    const y = Math.round((canvas.height - drawHeight) / 2);
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(bitmap, x, y, drawWidth, drawHeight);
-    state.paintedFrame = index;
-  }
-
-  async function paintFrame(index) {
-    const requested = clamp(index, 0, state.frameCount - 1);
-    const bitmap = await ensureBitmap(requested);
-    if (!bitmap || state.fallback) return;
-    if (requested === Math.round(state.smoothFrame) || state.paintedFrame < 0) {
-      drawBitmap(bitmap, requested);
-      [-2, -1, 1, 2].forEach((offset) => {
-        const neighbor = requested + offset;
-        if (neighbor >= 0 && neighbor < state.frameCount) ensureBitmap(neighbor);
-      });
-    }
-  }
-
-  function heroFrameLoop() {
-    if (state.frameCount && !state.fallback) {
-      const delta = state.targetFrame - state.smoothFrame;
-      state.smoothFrame = Math.abs(delta) < .015 ? state.targetFrame : state.smoothFrame + delta * .14;
-      const next = Math.round(state.smoothFrame);
-      if (next !== state.paintedFrame && !state.decoding.has(next)) paintFrame(next);
-    }
-    requestAnimationFrame(heroFrameLoop);
-  }
-
-  function updateHeroProgress() {
-    if (reducedMotion || !state.frameCount) return;
-    const rect = hero.getBoundingClientRect();
-    const travel = Math.max(1, hero.offsetHeight - window.innerHeight);
-    const progress = clamp(-rect.top / travel);
-    const sequenceProgress = progress <= .5 ? progress * 2 : (1 - progress) * 2;
-    state.lastProgress = progress;
-    state.targetFrame = sequenceProgress * (state.frameCount - 1);
-
-    const introOpacity = 1 - smoothstep(.08, .3, progress);
-    const resolveOpacity = smoothstep(.66, .9, progress);
-    const intro = hero.querySelector('.hero__copy--intro');
-    const resolve = hero.querySelector('.hero__copy--resolve');
-    intro.style.opacity = String(introOpacity);
-    intro.style.transform = `translateY(calc(-47% + ${progress * -10}px))`;
-    resolve.style.opacity = String(resolveOpacity);
-    resolve.style.transform = `translateY(${(1 - resolveOpacity) * 18}px)`;
-  }
+  /* ---------- Scroll chrome ----------
+     The header stays in its white-on-dark style until the dark stage at the
+     top of the page (home hero, or a service page's title stage) scrolls
+     up under it. */
+  const darkTop = document.querySelector('[data-dark-top]');
 
   function handleScroll() {
     const y = window.scrollY || document.documentElement.scrollTop;
-    siteHeader.classList.toggle('is-scrolled', y > window.innerHeight * .72);
-    scrollCue.classList.toggle('is-hidden', y > 30);
-    updateHeroProgress();
+    const threshold = darkTop
+      ? darkTop.offsetHeight - (siteHeader ? siteHeader.offsetHeight : 0)
+      : 0;
+    const pastHero = y > threshold;
+    if (siteHeader) siteHeader.classList.toggle('is-scrolled', pastHero);
+    body.classList.toggle('is-past-hero', pastHero);
+    if (scrollCue) scrollCue.classList.toggle('is-hidden', y > 30);
+    updateFilmstrip();
   }
 
   function initLenis() {
@@ -246,11 +225,10 @@
       window.addEventListener('scroll', handleScroll, { passive: true });
       return;
     }
-
     state.lenis = new window.Lenis({
       duration: 1.15,
       smoothWheel: true,
-      wheelMultiplier: .9,
+      wheelMultiplier: 0.9,
       touchMultiplier: 1.05
     });
     state.lenis.on('scroll', handleScroll);
@@ -261,89 +239,29 @@
     requestAnimationFrame(raf);
   }
 
-  async function upgradeToNative() {
-    const nativeTier = { path: 'hero-2x', count: 250, extension: 'webp' };
-    try {
-      const blobs = await fetchSequence(nativeTier);
-      for (const bitmap of state.bitmaps.values()) bitmap.close?.();
-      state.bitmaps.clear();
-      state.decoding.clear();
-      state.blobs = blobs;
-      state.tier = nativeTier;
-      state.frameCount = nativeTier.count;
-      state.paintedFrame = -1;
-      await paintFrame(Math.round(state.targetFrame));
-      document.documentElement.dataset.heroTier = 'native';
-    } catch (error) {
-      console.warn('[hero:upgrade]', error.message);
-    }
-  }
-
-  async function initHero() {
-    sizeCanvas();
-    requestAnimationFrame(heroFrameLoop);
-
-    if (reducedMotion) {
-      hero.classList.add('is-static');
-      heroStatic.addEventListener('error', () => {
-        heroStatic.src = '/frames/hero-jpg/frame_0001.jpg';
-      }, { once: true });
-      body.classList.add('is-ready');
-      loader.classList.add('is-complete');
-      initLenis();
-      return;
-    }
-
-    if (localQa && qaParams.get('qa-force-fallback') === '1') {
-      activateFallback('Local fallback-path verification');
-      return;
-    }
-
-    const tier = chooseTier();
-    state.tier = tier;
-    state.frameCount = tier.count;
-    document.documentElement.dataset.heroTier = tier.path;
-
-    const preload = fetchSequence(tier, setLoaderProgress);
-    const timeout = new Promise((_, reject) => {
-      window.setTimeout(() => reject(new Error('Frame preload exceeded 8 seconds')), 8000);
-    });
-
-    try {
-      state.blobs = await Promise.race([preload, timeout]);
-      const first = await ensureBitmap(0);
-      if (!first) throw new Error('First hero frame could not be decoded');
-      drawBitmap(first, 0);
-      unlockSite();
-      if (tier.nativeUpgrade) window.setTimeout(upgradeToNative, 500);
-    } catch (error) {
-      activateFallback(error.message);
-    }
-  }
-
+  /* ---------- Reveals ---------- */
   function initReveals() {
     const items = [...document.querySelectorAll('[data-reveal], [data-line-reveal]')];
     if (reducedMotion || !('IntersectionObserver' in window)) {
       items.forEach((item) => item.classList.add('is-visible'));
       return;
     }
-
-    document.querySelectorAll('.positioning__lines, .audience__list, .repurpose__stream').forEach((group) => {
+    document.querySelectorAll('.mc-badges, .mc-about__cols').forEach((group) => {
       [...group.children].forEach((item, index) => {
         item.style.transitionDelay = `${Math.min(index * 70, 420)}ms`;
       });
     });
-
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (!entry.isIntersecting) return;
         entry.target.classList.add('is-visible');
         observer.unobserve(entry.target);
       });
-    }, { threshold: .16, rootMargin: '0px 0px -8% 0px' });
+    }, { threshold: 0.16, rootMargin: '0px 0px -8% 0px' });
     items.forEach((item) => observer.observe(item));
   }
 
+  /* ---------- Lazy content media ---------- */
   function initLazyMedia() {
     const media = [...document.querySelectorAll('video[data-lazy-video], img[data-lazy-image]')];
     if (!media.length || !('IntersectionObserver' in window)) return;
@@ -361,6 +279,7 @@
     media.forEach((element) => observer.observe(element));
   }
 
+  /* ---------- Navigation ---------- */
   function setMenu(open) {
     menuToggle.setAttribute('aria-expanded', String(open));
     menuToggle.querySelector('.sr-only').textContent = open ? 'Close menu' : 'Open menu';
@@ -377,99 +296,235 @@
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' && menuToggle.getAttribute('aria-expanded') === 'true') setMenu(false);
     });
-
     document.querySelectorAll('a[href^="#"]').forEach((link) => {
       link.addEventListener('click', (event) => {
         const target = document.querySelector(link.getAttribute('href'));
         if (!target) return;
         event.preventDefault();
-        const menuWasOpen = menuToggle.getAttribute('aria-expanded') === 'true';
-        if (menuWasOpen) setMenu(false);
+        if (menuToggle.getAttribute('aria-expanded') === 'true') setMenu(false);
         if (state.lenis) state.lenis.scrollTo(target, { offset: 0, duration: 1.25 });
         else target.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' });
       });
     });
   }
 
-  function validateField(field) {
-    const wrapper = field.closest('.field');
-    const error = document.getElementById(`${field.id}Error`);
-    let message = '';
-    if (field.required && !field.value.trim()) message = 'This field is required.';
-    if (field.type === 'email' && field.value && !field.validity.valid) message = 'Enter a valid email address.';
-    wrapper?.classList.toggle('is-invalid', Boolean(message));
-    field.setAttribute('aria-invalid', String(Boolean(message)));
-    if (error) error.textContent = message;
-    return !message;
+  /* ---------- Work: pinned horizontal filmstrip ----------
+     Desktop only. The section is grown by the track's overflow, the inner
+     pin is sticky, and vertical scroll progress slides the track sideways.
+     Mobile and reduced motion keep the plain swipeable row from the CSS. */
+  const film = {
+    section: document.getElementById('work'),
+    pin: document.querySelector('.mc-work__pin'),
+    track: document.getElementById('filmTrack'),
+    active: false,
+    distance: 0
+  };
+
+  function measureFilmstrip() {
+    const { section, pin, track } = film;
+    if (!section || !pin || !track) return;
+    film.active = !reducedMotion && window.matchMedia('(min-width: 768px)').matches;
+    section.classList.toggle('is-pinned', film.active);
+    if (!film.active) {
+      section.style.height = '';
+      track.style.transform = '';
+      return;
+    }
+    film.distance = Math.max(0, track.scrollWidth - document.documentElement.clientWidth);
+    section.style.height = `${pin.offsetHeight + film.distance}px`;
+    updateFilmstrip();
   }
 
-  function initContactForm() {
-    const form = document.getElementById('contactForm');
-    const status = document.getElementById('formStatus');
-    const submit = form.querySelector('button[type="submit"]');
-    const fields = [...form.querySelectorAll('input:not([name="website"]), select, textarea')];
+  function updateFilmstrip() {
+    if (!film.active) return;
+    const travel = film.section.offsetHeight - film.pin.offsetHeight;
+    const progress = travel > 0 ? clamp(-film.section.getBoundingClientRect().top / travel) : 0;
+    film.track.style.transform = `translate3d(${(-progress * film.distance).toFixed(1)}px, 0, 0)`;
+  }
 
-    fields.forEach((field) => {
-      field.addEventListener('blur', () => validateField(field));
-      field.addEventListener('input', () => {
-        if (field.getAttribute('aria-invalid') === 'true') validateField(field);
+  function initFilmstrip() {
+    measureFilmstrip();
+    let resizeTimer = 0;
+    window.addEventListener('resize', () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(measureFilmstrip, 150);
+    });
+    // Fonts change the frame widths once they arrive.
+    document.fonts?.ready.then(measureFilmstrip);
+  }
+
+  /* ---------- Channel HUD ---------- */
+  function initHud() {
+    const no = document.getElementById('hudNo');
+    const name = document.getElementById('hudName');
+    const sections = [...document.querySelectorAll('[data-channel]')];
+    if (!no || !name || !sections.length || !('IntersectionObserver' in window)) return;
+    // A one-pixel line across the middle of the viewport: whichever section
+    // crosses it is "on air". A ratio threshold would never fire for the
+    // pinned work section, which is several screens tall.
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const [channel, label] = entry.target.dataset.channel.split('|');
+        no.textContent = channel;
+        name.textContent = label;
       });
+    }, { rootMargin: '-50% 0px -50% 0px' });
+    sections.forEach((section) => observer.observe(section));
+  }
+
+  /* ---------- REC cursor (fine pointers only) ---------- */
+  function initCursor() {
+    const dot = document.getElementById('mcCursor');
+    const ring = document.getElementById('mcCursorRing');
+    if (!dot || !ring || reducedMotion || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    let mx = -100, my = -100, rx = -100, ry = -100;
+    // Park both off-screen so nothing sits in the corner before the first move.
+    dot.style.transform = ring.style.transform = 'translate3d(-100px, -100px, 0)';
+    document.documentElement.classList.add('has-mc-cursor');
+    window.addEventListener('pointermove', (event) => {
+      mx = event.clientX;
+      my = event.clientY;
+      dot.style.transform = `translate3d(${mx}px, ${my}px, 0) translate(-50%, -50%)`;
+    }, { passive: true });
+    const follow = () => {
+      rx += (mx - rx) * 0.18;
+      ry += (my - ry) * 0.18;
+      ring.style.transform = `translate3d(${rx}px, ${ry}px, 0) translate(-50%, -50%)`;
+      requestAnimationFrame(follow);
+    };
+    requestAnimationFrame(follow);
+    const HOT = 'a, button, .mc-chip, .mc-frame, input, textarea, select';
+    document.addEventListener('pointerover', (event) => { if (event.target.closest(HOT)) ring.classList.add('is-hot'); });
+    document.addEventListener('pointerout', (event) => { if (event.target.closest(HOT)) ring.classList.remove('is-hot'); });
+  }
+
+  /* ---------- Service cards: gentle tilt + cursor spotlight ----------
+     Writes --rx/--ry (tilt) and --mx/--my (spotlight position); the CSS does
+     the rest. Mouse/trackpad only, and off entirely for reduced motion. */
+  function initCardTilt() {
+    if (reducedMotion || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    document.querySelectorAll('.mc-svc').forEach((card) => {
+      card.addEventListener('pointermove', (event) => {
+        const box = card.getBoundingClientRect();
+        const x = (event.clientX - box.left) / box.width;
+        const y = (event.clientY - box.top) / box.height;
+        card.style.setProperty('--mx', `${(x * 100).toFixed(1)}%`);
+        card.style.setProperty('--my', `${(y * 100).toFixed(1)}%`);
+        card.style.setProperty('--ry', `${((x - 0.5) * 5).toFixed(2)}deg`);
+        card.style.setProperty('--rx', `${((0.5 - y) * 4).toFixed(2)}deg`);
+      });
+      card.addEventListener('pointerleave', () => {
+        card.style.setProperty('--rx', '0deg');
+        card.style.setProperty('--ry', '0deg');
+      });
+    });
+  }
+
+  /* ---------- Contact: the call sheet ---------- */
+  function initCallSheet() {
+    const form = document.getElementById('callsheet');
+    if (!form) return;
+    const note = document.getElementById('csNote');
+    const submit = form.querySelector('.mc-submit');
+    const submitLabel = submit.querySelector('span');
+    const required = [...form.querySelectorAll('[data-required]')];
+
+    // Arriving from a service page (/?service=…&package=…#contact): tick the
+    // matching service and note the package, so the visitor doesn't have to
+    // repeat what they just chose.
+    const params = new URLSearchParams(window.location.search);
+    const wantedService = params.get('service');
+    if (wantedService) {
+      form.querySelectorAll('input[name="services"]').forEach((box) => {
+        if (box.value === wantedService) box.checked = true;
+      });
+    }
+    const wantedPackage = params.get('package');
+    const message = form.querySelector('textarea[name="message"]');
+    if (wantedPackage && message && !message.value) {
+      message.value = `I'm interested in: ${wantedPackage.slice(0, 120)}\n\n`;
+    }
+
+    const check = (input) => {
+      const value = input.value.trim();
+      let message = '';
+      if (!value) message = 'Required.';
+      else if (input.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) message = 'Enter a valid email address.';
+      input.setAttribute('aria-invalid', String(Boolean(message)));
+      const error = document.getElementById(input.getAttribute('aria-describedby'));
+      if (error) error.textContent = message;
+      return !message;
+    };
+
+    required.forEach((input) => {
+      input.addEventListener('blur', () => check(input));
+      input.addEventListener('input', () => { if (input.getAttribute('aria-invalid') === 'true') check(input); });
     });
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      status.className = 'form-status';
-      status.textContent = '';
-      const valid = fields.map(validateField).every(Boolean);
-      if (!valid) {
-        status.classList.add('is-error');
-        status.textContent = 'Please check the highlighted fields.';
+      note.className = 'mc-note';
+      note.textContent = '';
+      if (!required.map(check).every(Boolean)) {
+        note.classList.add('is-error');
+        note.textContent = 'Please fill in the highlighted fields.';
         form.querySelector('[aria-invalid="true"]')?.focus();
         return;
       }
 
-      submit.disabled = true;
-      submit.querySelector('span').textContent = 'Sending…';
-      status.textContent = 'Sending your project note securely…';
+      const data = new FormData(form);
+      const payload = Object.fromEntries(data.entries());
+      payload.services = data.getAll('services');
 
+      submit.disabled = true;
+      submitLabel.textContent = 'Rolling…';
       try {
-        const payload = Object.fromEntries(new FormData(form).entries());
         const response = await fetch('/api/contact', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
         const result = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(result.message || 'We could not send your message right now.');
-        status.classList.add('is-success');
-        status.textContent = result.message || 'Thanks. Your project note has been received.';
+        if (!response.ok) throw new Error(result.message || 'We could not send your call sheet right now.');
+        note.classList.add('is-success');
+        note.textContent = result.message || "Got it — we'll be in touch shortly.";
         form.reset();
-        fields.forEach((field) => {
-          field.removeAttribute('aria-invalid');
-          field.closest('.field')?.classList.remove('is-invalid');
-        });
+        required.forEach((input) => input.removeAttribute('aria-invalid'));
       } catch (error) {
-        status.classList.add('is-error');
-        status.textContent = error.message || 'We could not send your message right now. Please try again.';
+        note.classList.add('is-error');
+        note.textContent = error.message || 'We could not send your call sheet right now. Please try again.';
       } finally {
         submit.disabled = false;
-        submit.querySelector('span').textContent = 'Send project note';
+        submitLabel.textContent = 'Roll camera — send it';
       }
     });
   }
 
-  window.addEventListener('resize', () => {
-    window.clearTimeout(state.resizeTimer);
-    state.resizeTimer = window.setTimeout(() => {
-      sizeCanvas();
-      updateHeroProgress();
-    }, 180);
-  }, { passive: true });
+  /* ---------- Back to top ---------- */
+  function initBackToTop() {
+    document.getElementById('toTop')?.addEventListener('click', () => {
+      if (state.lenis) state.lenis.scrollTo(0, { duration: 1.4 });
+      else window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
+    });
+  }
 
-  document.getElementById('year').textContent = new Date().getFullYear();
+  /* ---------- Boot ---------- */
+  const year = document.getElementById('year');
+  if (year) year.textContent = new Date().getFullYear();
+  // Review notes (e.g. "proposed pricing") show on localhost only, never live.
+  if (localQa) document.querySelectorAll('[data-local-only]').forEach((note) => { note.hidden = false; });
   initReveals();
   initLazyMedia();
   initNavigation();
-  initContactForm();
+  initFilmstrip();
+  initHud();
+  initCursor();
+  initCardTilt();
+  initCallSheet();
+  initBackToTop();
   initHero();
+
+  // Ultimate fallback: never leave the loader up.
+  window.addEventListener('load', () => window.setTimeout(unlockSite, 500));
 })();

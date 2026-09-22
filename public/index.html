@@ -19,7 +19,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css?v=20260805b">
+  <link rel="stylesheet" href="/styles.css?v=20260911i">
+  <!-- The badge appears in the loader, so fetch it before anything else paints. -->
+  <link rel="preload" as="image" href="/brand/moocow-badge.webp" type="image/webp" fetchpriority="high">
   <script>document.documentElement.classList.remove('no-js');document.documentElement.classList.add('js');</script>
   <script type="application/ld+json">
   {
@@ -51,14 +53,14 @@
   <a class="skip-link" href="#main">Skip to content</a>
 
   <div class="loader" id="loader" role="status" aria-live="polite" aria-label="Loading hero sequence">
-    <div class="loader__identity" aria-hidden="true"><span>MC</span><i></i></div>
+    <div class="loader__identity" aria-hidden="true"><img src="/brand/moocow-badge.webp" alt="" width="160" height="160"><i></i></div>
     <div class="loader__track"><span id="loaderBar"></span></div>
     <div class="loader__meta"><span>Preparing the frame</span><span id="loaderPercent">0%</span></div>
   </div>
 
   <header class="site-header" id="siteHeader">
     <a class="wordmark" href="#hero" aria-label="MooCow Productions home">
-      <span class="wordmark__mark" aria-hidden="true">MC</span>
+      <img class="wordmark__logo" src="/brand/moocow-badge.webp" alt="" width="120" height="120">
       <span class="wordmark__name">MooCow<br>Productions</span>
     </a>
     <nav class="desktop-nav" aria-label="Primary navigation">
@@ -84,325 +86,310 @@
   </div>
 
   <main id="main">
-    <section class="hero" id="hero" aria-labelledby="heroTitle">
-      <div class="hero__sticky">
-        <canvas id="heroCanvas" aria-hidden="true"></canvas>
-        <video id="heroFallback" class="hero__fallback" src="/media/hero-fallback.mp4" muted loop playsinline preload="metadata" aria-hidden="true"></video>
-        <img id="heroStatic" class="hero__static" src="/frames/hero-2x/frame_0001.webp" alt="Matte black cinema camera illuminated by cool blue rim light">
+    <section class="hero" id="hero" data-dark-top data-channel="CH 01|THE SIGNAL" aria-labelledby="heroTitle">
+      <div class="hero__stage">
+        <!-- 1) Camera-explode (plays once), then fades to 2) the showreel (loops).
+             Sources are chosen in app.js: the lighter 720p files on phones and
+             data-saver connections, 1080p on desktop. Both are self-hosted in
+             /media — nothing depends on the old WordPress site. The posters are
+             what shows if a phone refuses autoplay (Low Power Mode, Data Saver). -->
+        <video id="heroCamera" class="hero__video hero__video--camera"
+               muted playsinline preload="auto"
+               poster="/frames/hero-2x/frame_0001.webp"
+               data-src-large="/media/hero-fallback.mp4"
+               data-src-small="/media/camera-720.mp4"
+               aria-hidden="true"></video>
+        <video id="heroReel" class="hero__video hero__video--reel"
+               muted loop playsinline preload="none"
+               poster="/media/reel-poster.webp"
+               data-src-large="/media/reel-1080.mp4"
+               data-src-small="/media/reel-720.mp4"
+               aria-hidden="true"></video>
         <div class="hero__vignette" aria-hidden="true"></div>
-        <div class="hero__copy hero__copy--intro">
-          <p class="eyebrow">Video production <span>+</span> visual content</p>
-          <h1 id="heroTitle">MooCow<br><span>Productions</span></h1>
-        </div>
-        <div class="hero__copy hero__copy--resolve">
-          <p>Helping businesses be seen,<br>understood, and trusted.</p>
-        </div>
-        <div class="hero__chapter" aria-hidden="true"><span>00</span><i></i><b>Assembly / intent</b></div>
-        <div class="scroll-cue" id="scrollCue" aria-hidden="true"><span>Scroll to reveal</span><i></i></div>
+        <!-- No visible hero copy — the footage carries it. The heading stays for
+             screen readers and search engines. -->
+        <h1 id="heroTitle" class="sr-only">MooCow Productions — video production and visual content that helps businesses be seen, understood, and trusted.</h1>
+        <div class="scroll-cue" id="scrollCue" aria-hidden="true"><i></i></div>
       </div>
     </section>
 
-    <section class="positioning section-black" aria-labelledby="positioningTitle">
+    <!-- =================================================================
+         BELOW THE HERO — light sections (ported from moocow-preview.html)
+         ================================================================= -->
+
+    <div class="mc-marquee" aria-hidden="true">
+      <div class="mc-marquee__row">
+        <div class="mc-marquee__track">
+          <span>Branded films<b>✦</b>Social content<b>✦</b>Motion graphics<b>✦</b>Drone visuals<b>✦</b>Ad campaigns<b>✦</b></span>
+          <span>Branded films<b>✦</b>Social content<b>✦</b>Motion graphics<b>✦</b>Drone visuals<b>✦</b>Ad campaigns<b>✦</b></span>
+        </div>
+      </div>
+      <div class="mc-marquee__row mc-marquee__row--outline">
+        <div class="mc-marquee__track">
+          <span>Story-driven<b>✦</b>High-impact<b>✦</b>On-brand<b>✦</b>Story-driven<b>✦</b>High-impact<b>✦</b>On-brand<b>✦</b></span>
+          <span>Story-driven<b>✦</b>High-impact<b>✦</b>On-brand<b>✦</b>Story-driven<b>✦</b>High-impact<b>✦</b>On-brand<b>✦</b></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STUDIO -->
+    <section class="mc-about" id="about" data-channel="CH 02|THE STUDIO" aria-labelledby="aboutTitle">
       <div class="section-shell">
-        <p class="section-kicker" data-reveal><span>01</span> Proof of work</p>
-        <h2 id="positioningTitle" class="sr-only">How we make your work visible</h2>
-        <div class="positioning__lines">
-          <p data-line-reveal>We capture <em>the work.</em></p>
-          <p data-line-reveal>We shape <em>the story.</em></p>
-          <p data-line-reveal>We package <em>the content.</em></p>
-          <p data-line-reveal>And your business gets seen,<br><em>understood, and trusted.</em></p>
+        <p class="mc-kicker" data-reveal>The studio</p>
+        <h2 class="mc-about__statement" id="aboutTitle" data-reveal>We are <em>visual storytellers</em> creating images that are both stunning and meaningful to your audience.</h2>
+        <div class="mc-about__cols">
+          <p data-reveal>MooCow Productions is your premier video production company. We design and deliver branded films, marketing, instructionals, and product videos.</p>
+          <p data-reveal>From video production and social media marketing to motion graphics and graphic design, we transform your vision into stunning visual stories that help businesses and individuals stand out in today's digital landscape.</p>
         </div>
+        <ul class="mc-badges" aria-label="What we do">
+          <li data-reveal>Branded films</li>
+          <li data-reveal>Marketing</li>
+          <li data-reveal>Instructionals</li>
+          <li data-reveal>Product video</li>
+          <li data-reveal>Motion graphics</li>
+          <li data-reveal>Graphic design</li>
+          <li data-reveal>Website design</li>
+          <li data-reveal>Brand identity &amp; guidelines</li>
+          <li data-reveal>Social media setup</li>
+        </ul>
       </div>
     </section>
 
-    <section class="services" id="services" aria-labelledby="servicesTitle">
-      <header class="section-intro section-shell">
-        <p class="section-kicker" data-reveal><span>02</span> What we do</p>
-        <h2 id="servicesTitle" data-reveal>Content with<br>a purpose.</h2>
-        <p data-reveal>Communicate clearly. Document your work.<br>Show up with credibility.</p>
-      </header>
-
-      <article class="service-lane" data-service="business">
-        <div class="service-lane__inner section-shell">
-          <div class="service-lane__index" data-reveal>01</div>
-          <div class="service-lane__copy">
-            <p class="eyebrow" data-reveal>Make the value clear</p>
-            <h3 data-reveal>Business &amp;<br>Corporate Video</h3>
-            <p data-reveal>Company overviews, brand stories, service explanations, training, executive messaging, recruitment and culture films.</p>
-          </div>
-          <!-- DROP-IN: service-business.mp4 or service-business.jpg, recommended 16:9 up to 1920x1080. -->
-          <div class="media-slot media-slot--wide" data-media-slot="service-business" aria-label="Business and corporate video media drop-in point">
-            <span>Strategy</span><i></i><span>Story</span><i></i><span>Trust</span>
-          </div>
-        </div>
-      </article>
-
-      <article class="service-lane" data-service="social">
-        <div class="service-lane__inner section-shell service-lane__inner--reverse">
-          <div class="service-lane__index" data-reveal>02</div>
-          <div class="service-lane__copy">
-            <p class="eyebrow" data-reveal>Stay visible</p>
-            <h3 data-reveal>Social Media<br>Content</h3>
-            <p data-reveal>Reels, shorts, vertical video, carousels, and captioned cutdowns—scroll-stopping content built on your real work, not trends.</p>
-          </div>
-          <!-- DROP-IN: service-social.mp4 or service-social.jpg, recommended vertical 9:16 up to 1080x1920. -->
-          <div class="media-slot media-slot--portrait" data-media-slot="service-social" aria-label="Social media content media drop-in point">
-            <strong>Real work.</strong><strong>Real moments.</strong><strong>Real expertise.</strong>
-          </div>
-        </div>
-      </article>
-
-      <article class="service-lane" data-service="construction">
-        <div class="service-lane__inner section-shell">
-          <div class="service-lane__index" data-reveal>03</div>
-          <div class="service-lane__copy">
-            <p class="eyebrow" data-reveal>Capture what matters</p>
-            <h3 data-reveal>Construction &amp;<br>Documentation</h3>
-            <p data-reveal>Progress capture, site walkthroughs, before/during/after, inspection support, milestone and bid-support video.</p>
-          </div>
-          <!-- DROP-IN: service-construction.mp4 or .jpg, recommended 16:9 up to 1920x1080. -->
-          <div class="media-slot media-slot--technical" data-media-slot="service-construction" aria-label="Construction documentation media drop-in point">
-            <span>01 / Before</span><span>02 / During</span><span>03 / After</span>
-          </div>
-        </div>
-      </article>
-
-      <article class="service-lane" data-service="management">
-        <div class="service-lane__inner section-shell service-lane__inner--reverse">
-          <div class="service-lane__index" data-reveal>04</div>
-          <div class="service-lane__copy">
-            <p class="eyebrow" data-reveal>Consistency, handled</p>
-            <h3 data-reveal>Social Media<br>Management</h3>
-            <p data-reveal>Calendars, posting, community management, and ad creative—social taken off your plate entirely.</p>
-          </div>
-          <!-- DROP-IN: service-management.mp4 or .jpg, recommended 4:5 or 16:9. -->
-          <div class="media-slot media-slot--schedule" data-media-slot="service-management" aria-label="Social media management media drop-in point">
-            <span>Plan</span><span>Publish</span><span>Manage</span><span>Measure</span>
-          </div>
-        </div>
-      </article>
-
-      <article class="service-lane" data-service="photo">
-        <div class="service-lane__inner section-shell">
-          <div class="service-lane__index" data-reveal>05</div>
-          <div class="service-lane__copy">
-            <p class="eyebrow" data-reveal>Finish with intention</p>
-            <h3 data-reveal>Photography &amp;<br>Post-Production</h3>
-            <p data-reveal>Headshots, event and project photography, editing, motion graphics, color, and multi-format delivery.</p>
-          </div>
-          <!-- DROP-IN: service-photo.jpg, recommended 3:2 up to 2000px. -->
-          <div class="media-slot media-slot--post" data-media-slot="service-photo" aria-label="Photography and post-production media drop-in point">
-            <span>Capture</span><span>Edit</span><span>Color</span><span>Deliver</span>
-          </div>
-        </div>
-      </article>
-    </section>
-
-    <section class="shift section-black" aria-labelledby="shiftTitle">
+    <!-- SERVICES -->
+    <section class="mc-services" id="services" data-channel="CH 03|SERVICES" aria-labelledby="servicesTitle">
       <div class="section-shell">
-        <p class="section-kicker" data-reveal><span>03</span> The shift</p>
-        <h2 id="shiftTitle" data-reveal>Credibility,<br>made visible.</h2>
-        <div class="shift__grid">
-          <div class="shift__column shift__column--before" data-reveal>
-            <p class="eyebrow">Before</p>
-            <ul>
-              <li>Doing great work, but nobody sees it.</li>
-              <li>Inconsistent visuals.</li>
-              <li>Hard to explain your value.</li>
-              <li>Projects undocumented.</li>
-              <li>Looking smaller online than you actually are.</li>
-            </ul>
-          </div>
-          <div class="shift__column shift__column--after" data-reveal>
-            <p class="eyebrow">After</p>
-            <ul>
-              <li>Professional assets you own.</li>
-              <li>Clearer messaging.</li>
-              <li>A documented record of your work.</li>
-              <li>Content for your site, socials, proposals, and sales.</li>
-              <li>A brand that matches the quality of the work.</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
+        <header class="mc-services__head">
+          <p class="mc-kicker" data-reveal>Our services</p>
+          <h2 class="mc-title" id="servicesTitle" data-reveal>What we do<em>.</em></h2>
+          <p class="mc-sub" data-reveal>Meaningful, high-impact content that captures attention, builds credibility, educates your audience — and drives engagement.</p>
+        </header>
 
-    <section class="audience" aria-labelledby="audienceTitle">
-      <div class="section-shell">
-        <p class="section-kicker" data-reveal><span>04</span> Who we work with</p>
-        <h2 id="audienceTitle" class="sr-only">Businesses and organizations we work with</h2>
-        <ol class="audience__list">
-          <li data-reveal><span>01</span>Small &amp; local service businesses</li>
-          <li data-reveal><span>02</span>Construction, contractors &amp; trades</li>
-          <li data-reveal><span>03</span>Events, organizations &amp; nonprofits</li>
-          <li data-reveal><span>04</span>Corporate &amp; professional services</li>
-          <li data-reveal><span>05</span>Real estate &amp; home-service professionals</li>
-        </ol>
-      </div>
-    </section>
-
-    <section class="work" id="work" aria-labelledby="workTitle">
-      <header class="section-intro section-shell">
-        <p class="section-kicker" data-reveal><span>05</span> The work</p>
-        <h2 id="workTitle" data-reveal>Selected<br>proof.</h2>
-        <p data-reveal>Real work becomes visual proof—built to live well beyond the day it was captured.</p>
-      </header>
-      <div class="work__gallery section-shell">
-        <!-- DROP-INS: work-01 through work-06; silent MP4 loops or JPG, up to 1920x1080. -->
-        <figure class="work-piece work-piece--one" data-reveal data-media-slot="work-01">
-          <div class="work-piece__void"><span>01</span><i></i><b>Tell the story</b></div>
-          <figcaption><span>Brand film</span><span>Business / Story / Trust</span></figcaption>
-        </figure>
-        <figure class="work-piece work-piece--two" data-reveal data-media-slot="work-02">
-          <div class="work-piece__void"><span>02</span><i></i><b>Document the work</b></div>
-          <figcaption><span>Project documentation</span><span>Process / Progress / Proof</span></figcaption>
-        </figure>
-        <figure class="work-piece work-piece--three" data-reveal data-media-slot="work-03">
-          <div class="work-piece__void"><span>03</span><i></i><b>Make it clear</b></div>
-          <figcaption><span>Service overview</span><span>Explain / Demonstrate / Convert</span></figcaption>
-        </figure>
-        <figure class="work-piece work-piece--four" data-reveal data-media-slot="work-04">
-          <div class="work-piece__void"><span>04</span><i></i><b>Capture the moment</b></div>
-          <figcaption><span>Event capture</span><span>People / Energy / Memory</span></figcaption>
-        </figure>
-        <figure class="work-piece work-piece--five" data-reveal data-media-slot="work-05">
-          <div class="work-piece__void"><span>05</span><i></i><b>Build the system</b></div>
-          <figcaption><span>Content series</span><span>One shoot / Many assets</span></figcaption>
-        </figure>
-        <figure class="work-piece work-piece--six" data-reveal data-media-slot="work-06">
-          <div class="work-piece__void"><span>06</span><i></i><b>Show the expertise</b></div>
-          <figcaption><span>Executive message</span><span>Authority / Clarity / Credibility</span></figcaption>
-        </figure>
-      </div>
-    </section>
-
-    <section class="repurpose" aria-labelledby="repurposeTitle">
-      <div class="repurpose__glow" aria-hidden="true"></div>
-      <div class="section-shell">
-        <p class="section-kicker" data-reveal><span>06</span> One shoot, many assets</p>
-        <h2 id="repurposeTitle" data-reveal>One day in.<br><em>A full system out.</em></h2>
-        <div class="repurpose__stream" aria-label="Assets created from one shoot">
-          <span data-reveal>Website video</span><i></i>
-          <span data-reveal>Reels</span><i></i>
-          <span data-reveal>Shorts</span><i></i>
-          <span data-reveal>Testimonials</span><i></i>
-          <span data-reveal>Sales assets</span><i></i>
-          <span data-reveal>Proposal visuals</span><i></i>
-          <span data-reveal>Training material</span><i></i>
-          <span data-reveal>Photography</span><i></i>
-          <span data-reveal>Email content</span>
-        </div>
-      </div>
-    </section>
-
-    <section class="about section-black" id="about" aria-labelledby="aboutTitle">
-      <div class="section-shell about__grid">
-        <div>
-          <p class="section-kicker" data-reveal><span>07</span> About MooCow</p>
-          <h2 id="aboutTitle" data-reveal>Built close<br>to the work.</h2>
-        </div>
-        <div class="about__copy">
-          <p class="about__lead" data-reveal>Over a decade of video production and visual storytelling, built on one belief: every brand deserves to be seen, heard, and remembered.</p>
-          <p data-reveal>Hands-on attention stays with every project—from the first conversation through the final delivery. You get a partner who understands what the work needs to do, not a vendor handing off files.</p>
-          <div class="about__belief" data-reveal><span>10+</span><p>Years turning real work, real moments, and real expertise into visual proof.</p></div>
-        </div>
-        <!-- DROP-IN: about-portrait.jpg, recommended portrait 4:5 up to 1600px. -->
-      </div>
-    </section>
-
-    <section class="contact" id="contact" aria-labelledby="contactTitle">
-      <div class="contact__glow" aria-hidden="true"></div>
-      <div class="section-shell">
-        <p class="section-kicker" data-reveal><span>08</span> Start a project</p>
-        <h2 id="contactTitle" data-reveal>Let's make your work<br><em>impossible to ignore.</em></h2>
-        <div class="contact__layout">
-          <p class="contact__aside" data-reveal>Tell us what the business needs to communicate, document, or put into motion. We’ll start there.</p>
-          <form id="contactForm" class="contact-form" novalidate data-reveal>
-            <div class="form-grid">
-              <div class="field">
-                <label for="name">Name <span aria-hidden="true">*</span></label>
-                <input id="name" name="name" type="text" autocomplete="name" required>
-                <small class="field-error" id="nameError"></small>
-              </div>
-              <div class="field">
-                <label for="business">Business <span aria-hidden="true">*</span></label>
-                <input id="business" name="business" type="text" autocomplete="organization" required>
-                <small class="field-error" id="businessError"></small>
-              </div>
-              <div class="field">
-                <label for="email">Email <span aria-hidden="true">*</span></label>
-                <input id="email" name="email" type="email" autocomplete="email" required>
-                <small class="field-error" id="emailError"></small>
-              </div>
-              <div class="field">
-                <label for="phone">Phone <span>(optional)</span></label>
-                <input id="phone" name="phone" type="tel" autocomplete="tel">
-                <small class="field-error" id="phoneError"></small>
-              </div>
-              <div class="field">
-                <label for="projectType">Project type <span aria-hidden="true">*</span></label>
-                <select id="projectType" name="projectType" required>
-                  <option value="">Choose one</option>
-                  <option>Business video</option>
-                  <option>Social content</option>
-                  <option>Construction documentation</option>
-                  <option>Event capture</option>
-                  <option>Photography</option>
-                  <option>Not sure yet</option>
-                </select>
-                <small class="field-error" id="projectTypeError"></small>
-              </div>
-              <div class="field">
-                <label for="budget">Monthly marketing budget <span aria-hidden="true">*</span></label>
-                <select id="budget" name="budget" required>
-                  <option value="">Choose one</option>
-                  <option>Under $3k</option>
-                  <option>$3–5k</option>
-                  <option>$5–10k</option>
-                  <option>$10k+</option>
-                </select>
-                <small class="field-error" id="budgetError"></small>
-              </div>
-              <div class="field field--full">
-                <label for="message">Message <span aria-hidden="true">*</span></label>
-                <textarea id="message" name="message" rows="4" required></textarea>
-                <small class="field-error" id="messageError"></small>
-              </div>
+        <div class="mc-svc-stack">
+          <article class="mc-svc" id="corporate" data-reveal>
+            <header class="mc-svc__head">
+              <span class="mc-svc__no">01</span>
+              <h3 class="mc-svc__name">Business<br>Content</h3>
+            </header>
+            <div class="mc-svc__body">
+              <p class="mc-svc__lead">Clarity, confidence &amp; connection in your corporate messaging<span class="mc-accent">.</span></p>
+              <p class="mc-svc__desc">Polished, on-brand video for internal updates, training, event coverage and executive messaging — professional on screen, authentic in voice.</p>
+              <ul class="mc-svc__list">
+                <li>Executive messaging &amp; announcements</li>
+                <li>Internal communications &amp; training</li>
+                <li>Company culture &amp; recruitment</li>
+                <li>Event recaps &amp; sizzle reels</li>
+                <li>Scriptwriting &amp; production support</li>
+              </ul>
+              <p class="mc-svc__why"><b>Why it matters —</b> clear messaging builds trust, video scales your communication, aligns your team, and keeps working long after the live event ends.</p>
+              <a class="mc-svc__cta" href="/services/business-content/">Content details &amp; investment <span aria-hidden="true">→</span></a>
             </div>
-            <div class="honeypot" aria-hidden="true">
-              <label for="website">Website</label><input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
+          </article>
+
+          <article class="mc-svc" id="social-content" data-reveal>
+            <header class="mc-svc__head">
+              <span class="mc-svc__no">02</span>
+              <h3 class="mc-svc__name">Social Media<br>Content</h3>
+            </header>
+            <div class="mc-svc__body">
+              <p class="mc-svc__lead">No time, no team, no content that actually works? We've got you<span class="mc-accent">.</span></p>
+              <p class="mc-svc__desc">Eye-catching visuals, engaging videos and on-brand messaging tailored to your audience. We handle the creative heavy lifting — from planning through production.</p>
+              <ul class="mc-svc__list">
+                <li>Branded video &amp; photography</li>
+                <li>Reels, shorts &amp; social clips</li>
+                <li>Graphics &amp; motion design</li>
+                <li>Creative direction &amp; scriptwriting</li>
+                <li>Content campaign kits</li>
+              </ul>
+              <p class="mc-svc__why"><b>Why it matters —</b> content builds trust, consistency compounds, speed wins the feed — and DIY is a full-time job you already don't have time for.</p>
+              <a class="mc-svc__cta" href="/services/social-media-content/">Content details &amp; investment <span aria-hidden="true">→</span></a>
             </div>
-            <div class="form-actions">
-              <p id="formStatus" class="form-status" role="status" aria-live="polite"></p>
-              <button class="primary-button" type="submit"><span>Send project note</span><i aria-hidden="true">↗</i></button>
+          </article>
+
+          <article class="mc-svc" id="construction" data-reveal>
+            <header class="mc-svc__head">
+              <span class="mc-svc__no">03</span>
+              <h3 class="mc-svc__name">Construction</h3>
+            </header>
+            <div class="mc-svc__body">
+              <p class="mc-svc__lead">Elevate your builds with visuals that speak volumes<span class="mc-accent">.</span></p>
+              <p class="mc-svc__desc">Documenting milestones, conducting inspections, or creating marketing-ready assets — polished, professional footage and photography tailored to the construction industry.</p>
+              <ul class="mc-svc__list">
+                <li>Inspection documentation — compliance, QA/QC &amp; audits</li>
+                <li>Progress &amp; milestone coverage</li>
+                <li>Aerial &amp; drone visuals</li>
+                <li>Client reporting &amp; stakeholder updates</li>
+              </ul>
+              <p class="mc-svc__why"><b>Why it matters —</b> clear oversight, evidence for permits and inspections, sharper bids, and stakeholder confidence through transparent on-site visuals.</p>
+              <a class="mc-svc__cta" href="/services/construction/">Content details &amp; investment <span aria-hidden="true">→</span></a>
             </div>
-          </form>
+          </article>
+
+          <article class="mc-svc" id="social-management" data-reveal>
+            <header class="mc-svc__head">
+              <span class="mc-svc__no">04</span>
+              <h3 class="mc-svc__name">Social Media<br>Management</h3>
+            </header>
+            <div class="mc-svc__body">
+              <p class="mc-svc__lead">Overwhelming you and underwhelming your clients? Hand it over<span class="mc-accent">.</span></p>
+              <p class="mc-svc__desc">Full-service management — content creation, scheduling, community management and ad campaigns — so you can focus on running your business.</p>
+              <ul class="mc-svc__list">
+                <li>Content planning &amp; strategy</li>
+                <li>Comment &amp; DM responses</li>
+                <li>Complete content calendar</li>
+                <li>Posting at the right times</li>
+                <li>Targeted ads for reach &amp; engagement</li>
+                <li>Performance tracking &amp; optimization</li>
+              </ul>
+              <a class="mc-svc__cta" href="/services/social-media-management/">Management details &amp; investment <span aria-hidden="true">→</span></a>
+            </div>
+          </article>
         </div>
+      </div>
+    </section>
+
+    <!-- WORK — pinned horizontal filmstrip -->
+    <section class="mc-work" id="work" data-channel="CH 04|THE WORK" aria-labelledby="workTitle">
+      <div class="mc-work__pin">
+        <header class="section-shell">
+          <p class="mc-kicker" data-reveal>Selected work</p>
+          <h2 class="mc-title" id="workTitle" data-reveal>The reel<em>.</em></h2>
+        </header>
+        <div class="mc-filmstrip" id="filmstrip">
+          <!-- DROP-INS: replace each poster gradient with a real still or silent loop —
+               e.g. <img data-lazy-image data-src="/media/work-sahale.webp" alt="">, 4:5, up to 1080x1350. -->
+          <div class="mc-film-track" id="filmTrack">
+            <figure class="mc-frame">
+              <div class="mc-frame__poster mc-p1"><i class="mc-frame__scan" aria-hidden="true"></i><span class="mc-frame__big">Sahale</span><span class="mc-frame__play" aria-hidden="true">▶</span></div>
+              <figcaption><span class="mc-frame__cat">Product promotion</span><span class="mc-frame__client">Sahale Snacks</span></figcaption>
+            </figure>
+            <figure class="mc-frame">
+              <div class="mc-frame__poster mc-p2"><i class="mc-frame__scan" aria-hidden="true"></i><span class="mc-frame__big">Curology</span><span class="mc-frame__play" aria-hidden="true">▶</span></div>
+              <figcaption><span class="mc-frame__cat">Product promotion</span><span class="mc-frame__client">Curology</span></figcaption>
+            </figure>
+            <figure class="mc-frame">
+              <div class="mc-frame__poster mc-p3"><i class="mc-frame__scan" aria-hidden="true"></i><span class="mc-frame__big">She Said</span><span class="mc-frame__play" aria-hidden="true">▶</span></div>
+              <figcaption><span class="mc-frame__cat">Podcast promotion</span><span class="mc-frame__client">She Said We Said</span></figcaption>
+            </figure>
+            <figure class="mc-frame">
+              <div class="mc-frame__poster mc-p4"><i class="mc-frame__scan" aria-hidden="true"></i><span class="mc-frame__big">Lotus</span><span class="mc-frame__play" aria-hidden="true">▶</span></div>
+              <figcaption><span class="mc-frame__cat">Business promotion</span><span class="mc-frame__client">Lotus Cleaning Services</span></figcaption>
+            </figure>
+            <figure class="mc-frame">
+              <div class="mc-frame__poster mc-p5"><i class="mc-frame__scan" aria-hidden="true"></i><span class="mc-frame__big">Storyline</span><span class="mc-frame__play" aria-hidden="true">▶</span></div>
+              <figcaption><span class="mc-frame__cat">Service opener</span><span class="mc-frame__client">Storyline Church</span></figcaption>
+            </figure>
+            <figure class="mc-frame">
+              <div class="mc-frame__poster mc-p6"><i class="mc-frame__scan" aria-hidden="true"></i><span class="mc-frame__big">Kaiser</span><span class="mc-frame__play" aria-hidden="true">▶</span></div>
+              <figcaption><span class="mc-frame__cat">Program promotion</span><span class="mc-frame__client">Kaiser Stretch Program</span></figcaption>
+            </figure>
+            <figure class="mc-frame mc-frame--cta">
+              <a href="#contact"><strong>Your<br>story<br>next<b>.</b></strong><em>Let's shoot it →</em></a>
+            </figure>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT — the call sheet -->
+    <section class="mc-contact" id="contact" data-channel="CH 05|ACTION" aria-labelledby="contactTitle">
+      <div class="section-shell mc-contact__inner">
+        <div class="mc-contact__intro">
+          <p class="mc-kicker" data-reveal>Get in touch</p>
+          <h2 class="mc-title" id="contactTitle" data-reveal>Ready?<br><em>Action.</em></h2>
+          <p class="mc-sub" data-reveal>Fill out the call sheet (super quick) and we'll get a plan of action to get you the outcomes you deserve.</p>
+          <div class="mc-socials" data-reveal>
+            <a href="https://facebook.com/MooCowTv" target="_blank" rel="noreferrer">Facebook</a>
+            <a href="https://instagram.com/moocow_ontv" target="_blank" rel="noreferrer">Instagram</a>
+            <a href="https://youtube.com/@MooCowTv" target="_blank" rel="noreferrer">YouTube</a>
+          </div>
+        </div>
+
+        <form class="mc-callsheet" id="callsheet" novalidate data-reveal>
+          <div class="mc-row2">
+            <label class="mc-field"><span>First name *</span><input type="text" name="first" autocomplete="given-name" data-required aria-describedby="errFirst"><small class="mc-err" id="errFirst"></small></label>
+            <label class="mc-field"><span>Last name *</span><input type="text" name="last" autocomplete="family-name" data-required aria-describedby="errLast"><small class="mc-err" id="errLast"></small></label>
+          </div>
+          <div class="mc-row2">
+            <label class="mc-field"><span>Email *</span><input type="email" name="email" autocomplete="email" data-required aria-describedby="errEmail"><small class="mc-err" id="errEmail"></small></label>
+            <label class="mc-field"><span>Phone</span><input type="tel" name="phone" autocomplete="tel"></label>
+          </div>
+          <div class="mc-row2">
+            <label class="mc-field"><span>Company</span><input type="text" name="company" autocomplete="organization"></label>
+            <label class="mc-field"><span>Website</span><input type="url" name="site" placeholder="https://" autocomplete="url"></label>
+          </div>
+
+          <fieldset>
+            <legend>Services you're interested in</legend>
+            <div class="mc-chips">
+              <label class="mc-chip"><input type="checkbox" name="services" value="Content Creation"><span>Content Creation</span></label>
+              <label class="mc-chip"><input type="checkbox" name="services" value="Social Media Ads"><span>Social Media Ads</span></label>
+              <label class="mc-chip"><input type="checkbox" name="services" value="Social Media Management"><span>Social Media Management</span></label>
+              <label class="mc-chip"><input type="checkbox" name="services" value="Corporate Videos"><span>Corporate Videos</span></label>
+              <label class="mc-chip"><input type="checkbox" name="services" value="Construction Visuals"><span>Construction Visuals</span></label>
+              <label class="mc-chip"><input type="checkbox" name="services" value="Graphic Design"><span>Graphic Design</span></label>
+              <label class="mc-chip"><input type="checkbox" name="services" value="Other"><span>Other</span></label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Monthly marketing budget</legend>
+            <div class="mc-chips">
+              <label class="mc-chip"><input type="radio" name="budget" value="Under $3,000"><span>&lt; $3,000</span></label>
+              <label class="mc-chip"><input type="radio" name="budget" value="$3,000–$5,000"><span>$3,000–$5,000</span></label>
+              <label class="mc-chip"><input type="radio" name="budget" value="$5,000–$10,000"><span>$5,000–$10,000</span></label>
+              <label class="mc-chip"><input type="radio" name="budget" value="$10,000+"><span>$10,000+</span></label>
+            </div>
+          </fieldset>
+
+          <label class="mc-field"><span>Tell us about your brand &amp; your social media goals</span><textarea name="message" rows="4"></textarea></label>
+
+          <fieldset>
+            <legend>How did you hear about us?</legend>
+            <div class="mc-chips">
+              <label class="mc-chip"><input type="radio" name="heard" value="Search engine"><span>Search Engine</span></label>
+              <label class="mc-chip"><input type="radio" name="heard" value="Facebook/Instagram ads"><span>FB/IG Ads</span></label>
+              <label class="mc-chip"><input type="radio" name="heard" value="YouTube ads"><span>YouTube Ads</span></label>
+              <label class="mc-chip"><input type="radio" name="heard" value="LinkedIn"><span>LinkedIn</span></label>
+              <label class="mc-chip"><input type="radio" name="heard" value="Word of mouth"><span>Word of mouth</span></label>
+              <label class="mc-chip"><input type="radio" name="heard" value="Other"><span>Other</span></label>
+            </div>
+          </fieldset>
+
+          <div class="mc-honeypot" aria-hidden="true">
+            <label for="nickname">Leave this empty</label><input id="nickname" name="nickname" type="text" tabindex="-1" autocomplete="off">
+          </div>
+
+          <button type="submit" class="mc-submit"><span>Roll camera — send it</span><i aria-hidden="true">↗</i></button>
+          <p class="mc-note" id="csNote" role="status" aria-live="polite"></p>
+        </form>
       </div>
     </section>
   </main>
 
-  <footer class="site-footer">
-    <div class="section-shell site-footer__top">
-      <a class="wordmark wordmark--footer" href="#hero" aria-label="MooCow Productions home">
-        <span class="wordmark__mark" aria-hidden="true">MC</span>
+  <footer class="mc-footer">
+    <div class="section-shell mc-footer__inner">
+      <a class="wordmark" href="#hero" aria-label="MooCow Productions home">
+        <img class="wordmark__logo" src="/brand/moocow-badge.webp" alt="" width="120" height="120" loading="lazy">
         <span class="wordmark__name">MooCow<br>Productions</span>
       </a>
-      <p>Communicate clearly.<br>Document your work.<br>Show up with credibility.</p>
-      <nav aria-label="Social links">
-        <a href="https://facebook.com/MooCowTv" target="_blank" rel="noreferrer">Facebook <span>↗</span></a>
-        <a href="https://instagram.com/moocow_ontv" target="_blank" rel="noreferrer">Instagram <span>↗</span></a>
-        <a href="https://youtube.com/@MooCowTv" target="_blank" rel="noreferrer">YouTube <span>↗</span></a>
+      <p class="mc-footer__tag">Video production · Content creation · Social media management</p>
+      <nav class="mc-footer__links" aria-label="Social links">
+        <a href="https://facebook.com/MooCowTv" target="_blank" rel="noreferrer">Facebook</a>
+        <a href="https://instagram.com/moocow_ontv" target="_blank" rel="noreferrer">Instagram</a>
+        <a href="https://youtube.com/@MooCowTv" target="_blank" rel="noreferrer">YouTube</a>
       </nav>
-    </div>
-    <div class="section-shell site-footer__bottom">
-      <span>© <span id="year"></span> MooCow Productions</span>
-      <span>Video production + visual content</span>
-      <a href="#hero">Back to top ↑</a>
+      <p class="mc-footer__copy">© <span id="year"></span> MooCow Productions — All stories reserved.</p>
+      <button class="mc-footer__top" id="toTop" type="button">Cut — back to top ↑</button>
     </div>
   </footer>
 
+  <!-- Site chrome from the preview: channel HUD, REC cursor, film grain -->
+  <div class="mc-hud" aria-hidden="true"><span class="mc-hud__no" id="hudNo">CH 01</span><span id="hudName">THE SIGNAL</span></div>
+  <div class="mc-cursor" id="mcCursor" aria-hidden="true"><span class="mc-cursor__label">REC</span></div>
+  <div class="mc-cursor-ring" id="mcCursorRing" aria-hidden="true"></div>
+  <div class="mc-grain" aria-hidden="true"></div>
+
   <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.11/dist/lenis.min.js" defer></script>
-  <script src="/app.js?v=20260805c" defer></script>
+  <script src="/app.js?v=20260911a" defer></script>
 </body>
 </html>

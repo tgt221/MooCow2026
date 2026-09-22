@@ -5,7 +5,8 @@
   "description": "MooCow Productions cinematic one-page website",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build:pages": "node tools/build-service-pages.js"
   },
   "engines": {
     "node": ">=18"
