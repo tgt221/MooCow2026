@@ -105,16 +105,24 @@ async function passesHumanCheck(token, ip) {
 }
 
 const REQUIRED_SMTP = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'CONTACT_TO'];
-const smtpConfigured = () => REQUIRED_SMTP.every((key) => process.env[key]);
+
+// Values pasted into a hosting panel routinely arrive with a trailing space or
+// wrapped in quotes. Both are sent verbatim and look exactly like a wrong
+// password, so strip them here rather than chasing a phantom 535 later.
+function env(key) {
+  return String(process.env[key] ?? '').trim().replace(/^(['"])([\s\S]*)\1$/, '$2');
+}
+
+const smtpConfigured = () => REQUIRED_SMTP.every((key) => env(key));
 
 function makeTransport() {
-  const port = Number.parseInt(process.env.SMTP_PORT, 10);
+  const port = Number.parseInt(env('SMTP_PORT'), 10);
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
+    host: env('SMTP_HOST'),
     port,
     // 465 = implicit TLS. 587 (and 25) start plain and upgrade via STARTTLS.
     secure: port === 465,
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+    auth: { user: env('SMTP_USER'), pass: env('SMTP_PASS') }
   });
 }
 
@@ -232,8 +240,8 @@ app.post('/api/contact', contactRateLimit, async (req, res) => {
     ];
 
     await transporter.sendMail({
-      from: process.env.SMTP_USER,
-      to: process.env.CONTACT_TO,
+      from: env('SMTP_USER'),
+      to: env('CONTACT_TO'),
       replyTo: body.email,
       subject: `New MooCow call sheet — ${body.company || fullName}`,
       text: lines.join('\n')
@@ -263,7 +271,12 @@ app.listen(port, () => {
     console.warn(`[smtp] not configured — contact form disabled. Missing: ${missing.join(', ')}`);
     return;
   }
-  console.log(`[smtp] testing ${process.env.SMTP_USER} via ${process.env.SMTP_HOST}:${process.env.SMTP_PORT}…`);
+  // Never log the password. Its length, and whether stray quotes/spaces had to
+  // be trimmed off it, are enough to tell a typo from a genuinely wrong password.
+  const tidied = REQUIRED_SMTP.filter((key) => process.env[key] !== env(key));
+  console.log(`[smtp] testing ${env('SMTP_USER')} via ${env('SMTP_HOST')}:${env('SMTP_PORT')}`
+    + ` — pass is ${env('SMTP_PASS').length} chars`
+    + (tidied.length ? `; trimmed stray quotes/spaces from: ${tidied.join(', ')}` : '') + '…');
   makeTransport().verify()
     .then(() => console.log('[smtp] OK — the contact form can send mail'))
     .catch((error) => console.error('[smtp] FAILED —', describeSmtpError(error)));
