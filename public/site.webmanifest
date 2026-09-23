@@ -1,0 +1,14 @@
+{
+  "name": "MooCow Productions",
+  "short_name": "MooCow",
+  "description": "Video production and visual content that helps businesses be seen, understood, and trusted.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#eef2f5",
+  "theme_color": "#000000",
+  "icons": [
+    { "src": "/brand/favicon-32.png", "sizes": "32x32", "type": "image/png" },
+    { "src": "/brand/favicon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/brand/favicon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

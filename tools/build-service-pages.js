@@ -212,6 +212,10 @@ function page(svc) {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css?v=${cssVersion}">
+  <link rel="icon" href="/brand/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png">
+  <link rel="apple-touch-icon" href="/brand/favicon-180.png">
+  <link rel="manifest" href="/site.webmanifest">
   <script>document.documentElement.classList.remove('no-js');document.documentElement.classList.add('js');</script>
   <script type="application/ld+json">${JSON.stringify(structured)}</script>
 </head>

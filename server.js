@@ -104,6 +104,33 @@ async function passesHumanCheck(token, ip) {
   }
 }
 
+const REQUIRED_SMTP = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'CONTACT_TO'];
+const smtpConfigured = () => REQUIRED_SMTP.every((key) => process.env[key]);
+
+function makeTransport() {
+  const port = Number.parseInt(process.env.SMTP_PORT, 10);
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port,
+    // 465 = implicit TLS. 587 (and 25) start plain and upgrade via STARTTLS.
+    secure: port === 465,
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+  });
+}
+
+/** Logs why a send failed in terms that point at the fix. */
+function describeSmtpError(error) {
+  const code = error?.code || error?.responseCode || 'unknown';
+  const hints = {
+    EAUTH: 'username or password rejected — SMTP_USER must be the full email address',
+    ECONNECTION: 'could not reach the mail server — check SMTP_HOST and SMTP_PORT',
+    ETIMEDOUT: 'connection timed out — the host may block this port; try 587 instead of 465',
+    ESOCKET: 'TLS/socket problem — usually the wrong port for the security mode (465 vs 587)',
+    EENVELOPE: 'the from/to address was rejected — SMTP_USER must be allowed to send as itself'
+  };
+  return `${code}: ${error?.message || 'no message'}${hints[code] ? ` | likely cause: ${hints[code]}` : ''}`;
+}
+
 function clean(value, max = 2000) {
   return String(value ?? '').trim().replace(/\0/g, '').slice(0, max);
 }
@@ -177,8 +204,7 @@ app.post('/api/contact', contactRateLimit, async (req, res) => {
     return res.status(400).json({ ok: false, message: 'Please add your first and last name and a valid email address.' });
   }
 
-  const requiredEnv = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'CONTACT_TO'];
-  const smtpReady = requiredEnv.every((key) => process.env[key]);
+  const smtpReady = smtpConfigured();
 
   if (!smtpReady) {
     if (process.env.NODE_ENV === 'production') {
@@ -190,15 +216,7 @@ app.post('/api/contact', contactRateLimit, async (req, res) => {
   }
 
   try {
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number.parseInt(process.env.SMTP_PORT, 10),
-      secure: Number.parseInt(process.env.SMTP_PORT, 10) === 465,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
-    });
+    const transporter = makeTransport();
 
     const lines = [
       `Name: ${fullName}`,
@@ -223,7 +241,7 @@ app.post('/api/contact', contactRateLimit, async (req, res) => {
 
     return res.json({ ok: true, message: thanks });
   } catch (error) {
-    console.error('[contact:error]', error?.message || 'Unknown SMTP error');
+    console.error('[contact:error]', describeSmtpError(error));
     return res.status(502).json({ ok: false, message: 'We could not send your message right now. Please try again or email us directly.' });
   }
 });
@@ -237,4 +255,16 @@ app.use((req, res) => {
 
 app.listen(port, () => {
   console.log(`MooCow site running at http://localhost:${port}`);
+
+  // Check the mail settings at boot so the deploy log says whether the contact
+  // form can actually send — instead of only finding out when a visitor tries.
+  if (!smtpConfigured()) {
+    const missing = REQUIRED_SMTP.filter((key) => !process.env[key]);
+    console.warn(`[smtp] not configured — contact form disabled. Missing: ${missing.join(', ')}`);
+    return;
+  }
+  console.log(`[smtp] testing ${process.env.SMTP_USER} via ${process.env.SMTP_HOST}:${process.env.SMTP_PORT}…`);
+  makeTransport().verify()
+    .then(() => console.log('[smtp] OK — the contact form can send mail'))
+    .catch((error) => console.error('[smtp] FAILED —', describeSmtpError(error)));
 });
