@@ -130,7 +130,10 @@ function makeTransport() {
 function describeSmtpError(error) {
   const code = error?.code || error?.responseCode || 'unknown';
   const hints = {
-    EAUTH: 'username or password rejected — SMTP_USER must be the full email address',
+    // A 535 usually means SMTP_HOST points at the wrong provider. The mailbox is
+    // Titan (smtp.titan.email), which Hostinger resells — smtp.hostinger.com does
+    // not know the account exists and refuses the login as if the password were wrong.
+    EAUTH: 'login rejected — check SMTP_HOST is the mailbox\'s real provider (smtp.titan.email), and that SMTP_PASS is the mailbox password, not the hosting panel password',
     ECONNECTION: 'could not reach the mail server — check SMTP_HOST and SMTP_PORT',
     ETIMEDOUT: 'connection timed out — the host may block this port; try 587 instead of 465',
     ESOCKET: 'TLS/socket problem — usually the wrong port for the security mode (465 vs 587)',
