@@ -21,7 +21,8 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       // challenges.cloudflare.com = Turnstile (the "I am human" check).
       scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net', 'https://challenges.cloudflare.com'],
-      frameSrc: ["'self'", 'https://challenges.cloudflare.com'],
+      // youtube-nocookie = the Reel lightbox player.
+      frameSrc: ["'self'", 'https://challenges.cloudflare.com', 'https://www.youtube-nocookie.com'],
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com'],
       // All media is self-hosted now; nothing loads from the old WordPress site.
@@ -35,7 +36,13 @@ app.use(helmet({
       upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null
     }
   },
-  crossOriginResourcePolicy: { policy: 'same-origin' }
+  crossOriginResourcePolicy: { policy: 'same-origin' },
+  // Helmet defaults to no-referrer, which makes the YouTube player in the Reel
+  // lightbox fail with "configuration error 153" — it will not start unless it
+  // can see which site is embedding it. This sends the bare origin to other
+  // sites and nothing at all when downgrading to http, which is the modern
+  // browser default and leaks no path or query.
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
 }));
 app.use(compression());
 app.use(express.json({ limit: '32kb' }));

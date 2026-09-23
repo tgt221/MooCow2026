@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css?v=20260922b">
+  <link rel="stylesheet" href="/styles.css?v=20260922c">
   <link rel="icon" href="/brand/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png">
   <link rel="apple-touch-icon" href="/brand/favicon-180.png">
@@ -185,7 +185,7 @@
                 <li>Scriptwriting &amp; production support</li>
               </ul>
               <p class="mc-svc__why"><b>Why it matters —</b> clear messaging builds trust, video scales your communication, aligns your team, and keeps working long after the live event ends.</p>
-              <a class="mc-svc__cta" href="/services/business-content/">Content details &amp; investment <span aria-hidden="true">→</span></a>
+              <a class="mc-svc__cta" href="/services/business-content/">Content details <span aria-hidden="true">→</span></a>
             </div>
           </article>
 
@@ -224,7 +224,7 @@
                 <li>Client reporting &amp; stakeholder updates</li>
               </ul>
               <p class="mc-svc__why"><b>Why it matters —</b> clear oversight, evidence for permits and inspections, sharper bids, and stakeholder confidence through transparent on-site visuals.</p>
-              <a class="mc-svc__cta" href="/services/construction/">Content details &amp; investment <span aria-hidden="true">→</span></a>
+              <a class="mc-svc__cta" href="/services/construction/">Content details <span aria-hidden="true">→</span></a>
             </div>
           </article>
 
@@ -259,31 +259,69 @@
           <h2 class="mc-title" id="workTitle" data-reveal>The reel<em>.</em></h2>
         </header>
         <div class="mc-filmstrip" id="filmstrip">
-          <!-- DROP-INS: replace each poster gradient with a real still or silent loop —
-               e.g. <img data-lazy-image data-src="/media/work-sahale.webp" alt="">, 4:5, up to 1080x1350. -->
+          <!-- Each poster links straight to YouTube, so it works with no JS.
+               app.js upgrades the click into an in-page lightbox. Stills are the
+               videos' own frames (tools/build-reel-posters.sh) — swap in better
+               ones any time; keep 4:5 and the same filenames. -->
           <div class="mc-film-track" id="filmTrack">
             <figure class="mc-frame">
-              <div class="mc-frame__poster mc-p1"><i class="mc-frame__scan" aria-hidden="true"></i><span class="mc-frame__big">Sahale</span><span class="mc-frame__play" aria-hidden="true">▶</span></div>
+              <a class="mc-frame__open" href="https://youtu.be/BJ1SYShC2mc" data-video="BJ1SYShC2mc" data-video-title="Sahale Snacks — Snack Better">
+                <span class="mc-frame__poster mc-p1">
+                  <img class="mc-frame__still" src="/media/work-sahale.webp" alt="" width="720" height="900" loading="lazy" decoding="async">
+                  <i class="mc-frame__scan" aria-hidden="true"></i><span class="mc-frame__big">Sahale</span><span class="mc-frame__play" aria-hidden="true">▶</span>
+                </span>
+                <span class="sr-only">Play the Sahale Snacks film</span>
+              </a>
               <figcaption><span class="mc-frame__cat">Product promotion</span><span class="mc-frame__client">Sahale Snacks</span></figcaption>
             </figure>
             <figure class="mc-frame">
-              <div class="mc-frame__poster mc-p2"><i class="mc-frame__scan" aria-hidden="true"></i><span class="mc-frame__big">Curology</span><span class="mc-frame__play" aria-hidden="true">▶</span></div>
-              <figcaption><span class="mc-frame__cat">Product promotion</span><span class="mc-frame__client">Curology</span></figcaption>
+              <a class="mc-frame__open" href="https://youtu.be/a7Rs2cM4D3s" data-video="a7Rs2cM4D3s" data-video-title="Unknown2Man — brand commercial">
+                <span class="mc-frame__poster mc-p2">
+                  <img class="mc-frame__still" src="/media/work-unknown2man.webp" alt="" width="720" height="900" loading="lazy" decoding="async">
+                  <i class="mc-frame__scan" aria-hidden="true"></i><span class="mc-frame__big">Unknown</span><span class="mc-frame__play" aria-hidden="true">▶</span>
+                </span>
+                <span class="sr-only">Play the Unknown2Man film</span>
+              </a>
+              <figcaption><span class="mc-frame__cat">Brand commercial</span><span class="mc-frame__client">Unknown2Man</span></figcaption>
             </figure>
             <figure class="mc-frame">
-              <div class="mc-frame__poster mc-p3"><i class="mc-frame__scan" aria-hidden="true"></i><span class="mc-frame__big">She Said</span><span class="mc-frame__play" aria-hidden="true">▶</span></div>
+              <a class="mc-frame__open" href="https://youtu.be/Ages8oVlYtw" data-video="Ages8oVlYtw" data-video-title="She Said We Said — podcast promo">
+                <span class="mc-frame__poster mc-p3">
+                  <img class="mc-frame__still" src="/media/work-shesaid.webp" alt="" width="720" height="900" loading="lazy" decoding="async">
+                  <i class="mc-frame__scan" aria-hidden="true"></i><span class="mc-frame__big">She Said</span><span class="mc-frame__play" aria-hidden="true">▶</span>
+                </span>
+                <span class="sr-only">Play the She Said We Said promo</span>
+              </a>
               <figcaption><span class="mc-frame__cat">Podcast promotion</span><span class="mc-frame__client">She Said We Said</span></figcaption>
             </figure>
             <figure class="mc-frame">
-              <div class="mc-frame__poster mc-p4"><i class="mc-frame__scan" aria-hidden="true"></i><span class="mc-frame__big">Lotus</span><span class="mc-frame__play" aria-hidden="true">▶</span></div>
-              <figcaption><span class="mc-frame__cat">Business promotion</span><span class="mc-frame__client">Lotus Cleaning Services</span></figcaption>
+              <a class="mc-frame__open" href="https://youtu.be/KDug5su6TGU" data-video="KDug5su6TGU" data-video-title="Real estate — home showing">
+                <span class="mc-frame__poster mc-p4">
+                  <img class="mc-frame__still" src="/media/work-realestate.webp" alt="" width="720" height="900" loading="lazy" decoding="async">
+                  <i class="mc-frame__scan" aria-hidden="true"></i><span class="mc-frame__big">Home</span><span class="mc-frame__play" aria-hidden="true">▶</span>
+                </span>
+                <span class="sr-only">Play the real estate home showing film</span>
+              </a>
+              <figcaption><span class="mc-frame__cat">Real estate</span><span class="mc-frame__client">Home showing tour</span></figcaption>
             </figure>
             <figure class="mc-frame">
-              <div class="mc-frame__poster mc-p5"><i class="mc-frame__scan" aria-hidden="true"></i><span class="mc-frame__big">Storyline</span><span class="mc-frame__play" aria-hidden="true">▶</span></div>
+              <a class="mc-frame__open" href="https://youtu.be/8fyfOantCh0" data-video="8fyfOantCh0" data-video-title="Storyline Church — service intro">
+                <span class="mc-frame__poster mc-p5">
+                  <img class="mc-frame__still" src="/media/work-storyline.webp" alt="" width="720" height="900" loading="lazy" decoding="async">
+                  <i class="mc-frame__scan" aria-hidden="true"></i><span class="mc-frame__big">Storyline</span><span class="mc-frame__play" aria-hidden="true">▶</span>
+                </span>
+                <span class="sr-only">Play the Storyline Church intro</span>
+              </a>
               <figcaption><span class="mc-frame__cat">Service opener</span><span class="mc-frame__client">Storyline Church</span></figcaption>
             </figure>
             <figure class="mc-frame">
-              <div class="mc-frame__poster mc-p6"><i class="mc-frame__scan" aria-hidden="true"></i><span class="mc-frame__big">Kaiser</span><span class="mc-frame__play" aria-hidden="true">▶</span></div>
+              <a class="mc-frame__open" href="https://youtu.be/PWyqA9bqEiA" data-video="PWyqA9bqEiA" data-video-title="Kaiser Permanente — Stretch Yourself">
+                <span class="mc-frame__poster mc-p6">
+                  <img class="mc-frame__still" src="/media/work-kaiser.webp" alt="" width="720" height="900" loading="lazy" decoding="async">
+                  <i class="mc-frame__scan" aria-hidden="true"></i><span class="mc-frame__big">Kaiser</span><span class="mc-frame__play" aria-hidden="true">▶</span>
+                </span>
+                <span class="sr-only">Play the Kaiser Permanente Stretch Program film</span>
+              </a>
               <figcaption><span class="mc-frame__cat">Program promotion</span><span class="mc-frame__client">Kaiser Stretch Program</span></figcaption>
             </figure>
             <figure class="mc-frame mc-frame--cta">
@@ -400,7 +438,20 @@
   <div class="mc-cursor-ring" id="mcCursorRing" aria-hidden="true"></div>
   <div class="mc-grain" aria-hidden="true"></div>
 
+  <!-- Reel player. The iframe is created on open and destroyed on close, which
+       is what actually stops playback — hiding it keeps the audio running. -->
+  <div class="mc-lightbox" id="lightbox" hidden>
+    <div class="mc-lightbox__scrim" data-close></div>
+    <div class="mc-lightbox__panel" role="dialog" aria-modal="true" aria-labelledby="lightboxTitle">
+      <div class="mc-lightbox__stage" id="lightboxStage"></div>
+      <div class="mc-lightbox__bar">
+        <p class="mc-lightbox__title" id="lightboxTitle"></p>
+        <button class="mc-lightbox__close" id="lightboxClose" type="button" data-close>Close <span aria-hidden="true">✕</span></button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.11/dist/lenis.min.js" defer></script>
-  <script src="/app.js?v=20260922a" defer></script>
+  <script src="/app.js?v=20260922c" defer></script>
 </body>
 </html>

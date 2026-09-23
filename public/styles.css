@@ -563,6 +563,8 @@ body { background: var(--paper); color: var(--ink); }
 .mc-film-track { display: flex; gap: 1.4rem; width: max-content; padding-inline: var(--side); will-change: transform; }
 
 .mc-frame { flex: 0 0 auto; width: clamp(15rem, 23vw, 21rem); margin: 0; scroll-snap-align: start; }
+.mc-frame__open { display: block; color: inherit; text-decoration: none; }
+.mc-frame__open:focus-visible { outline: 2px solid var(--blue); outline-offset: 6px; border-radius: 16px; }
 .mc-frame__poster {
   position: relative;
   display: grid;
@@ -610,7 +612,35 @@ body { background: var(--paper); color: var(--ink); }
 .mc-frame__cat { color: var(--blue-text); font-size: .64rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; }
 .mc-frame__client { color: var(--ink); font-size: .98rem; font-weight: 600; }
 
-/* Placeholder posters — brand-family gradients until real stills drop in. */
+/* The still sits under every other poster layer. It is pulled from the video
+   itself, so it is softer than a shot still — the gradient beneath and the
+   ::before wash above are what keep the title legible over it. */
+.mc-frame__still {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(.92) contrast(1.04);
+  transform: scale(1.01);
+  transition: transform .6s var(--ease), filter .35s var(--ease);
+}
+.mc-frame:hover .mc-frame__still { transform: scale(1.06); filter: saturate(1) contrast(1.06); }
+/* The wash is a ::before, so it paints BEFORE the <img> element and would sit
+   underneath it. Lift it above the still; .mc-frame__big/__scan/__play all
+   carry z-index 1 and come later in the DOM, so they still read on top. */
+.mc-frame__poster:has(.mc-frame__still)::before {
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(3, 18, 26, .12), rgba(3, 18, 26, .58));
+}
+.mc-frame:hover .mc-frame__poster:has(.mc-frame__still)::before { opacity: .8; }
+/* These frames are the films' own title cards — they already carry the client's
+   name in the artwork. A second name stamped over it reads as a mistake, so the
+   caption below the poster does the naming instead. */
+.mc-frame__poster:has(.mc-frame__still) .mc-frame__big { display: none; }
+
+/* Poster gradients. Still the backdrop while a photo loads, and the whole
+   poster for any frame that has no still yet. */
 .mc-p1 { background: linear-gradient(145deg, #0b2531, #1f6484); }
 .mc-p2 { background: linear-gradient(145deg, #13202e, #3a6f8c); }
 .mc-p3 { background: linear-gradient(145deg, #171c30, #45609a); }
@@ -631,6 +661,68 @@ body { background: var(--paper); color: var(--ink); }
 .mc-frame--cta strong b { color: var(--blue); font-weight: 400; }
 .mc-frame--cta em { color: var(--blue-text); font-size: .82rem; font-style: normal; font-weight: 600; letter-spacing: .08em; }
 .mc-frame--cta a:hover em { text-decoration: underline; text-underline-offset: 4px; }
+
+/* ---------- Reel lightbox ---------- */
+.mc-lightbox {
+  position: fixed;
+  z-index: 200;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 4vw, 3rem);
+}
+.mc-lightbox__scrim { position: absolute; inset: 0; background: rgba(3, 14, 20, .88); backdrop-filter: blur(6px); }
+.mc-lightbox__panel {
+  position: relative;
+  width: min(100%, 68rem);
+  display: grid;
+  gap: .85rem;
+  animation: mc-lightbox-in .32s var(--ease) both;
+}
+@keyframes mc-lightbox-in { from { opacity: 0; transform: translateY(14px) scale(.985); } }
+.mc-lightbox__stage {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 14px;
+  background: #000;
+  box-shadow: 0 40px 90px -40px rgba(0, 0, 0, .9);
+}
+.mc-lightbox__stage iframe { width: 100%; height: 100%; border: 0; }
+.mc-lightbox__bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.mc-lightbox__title {
+  margin: 0;
+  color: #fff;
+  font-size: .95rem;
+  font-weight: 600;
+  letter-spacing: .01em;
+}
+.mc-lightbox__close {
+  border: 1px solid rgba(255, 255, 255, .28);
+  border-radius: 999px;
+  padding: .5rem 1rem;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  white-space: nowrap; /* "CLOSE ✕" must never break inside the pill */
+  flex: 0 0 auto;
+  cursor: pointer;
+  transition: background .25s, border-color .25s, color .25s;
+}
+.mc-lightbox__close:hover { border-color: var(--blue); background: var(--blue); color: #04222f; }
+.mc-lightbox__close:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+/* The REC cursor is decorative; over a video it just gets in the way. */
+body.lightbox-open .mc-cursor,
+body.lightbox-open .mc-cursor-ring,
+body.lightbox-open .mc-hud { opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .mc-lightbox__panel { animation: none; }
+}
 
 /* ---------- Studio ---------- */
 .mc-about { padding: clamp(8rem, 18vh, 14rem) 0 clamp(4rem, 8vh, 6rem); background: var(--paper); }

@@ -539,6 +539,74 @@
     });
   }
 
+  /* ---------- Reel lightbox ----------
+     Every poster is a plain link to YouTube, so the reel works with no JS at
+     all. Here we upgrade the click into an in-page player: build the iframe on
+     open, destroy it on close (hiding it would keep the audio playing). */
+  function initLightbox() {
+    const lightbox = document.getElementById('lightbox');
+    const stage = document.getElementById('lightboxStage');
+    const title = document.getElementById('lightboxTitle');
+    const closeBtn = document.getElementById('lightboxClose');
+    const triggers = document.querySelectorAll('.mc-frame__open[data-video]');
+    if (!lightbox || !stage || !title || !closeBtn || !triggers.length) return;
+
+    let lastFocused = null;
+
+    function close() {
+      if (lightbox.hidden) return;
+      lightbox.hidden = true;
+      stage.replaceChildren(); // removing the iframe is what stops playback
+      body.classList.remove('lightbox-open');
+      if (state.lenis) state.lenis.start();
+      lastFocused?.focus({ preventScroll: true });
+    }
+
+    function open(videoId, label) {
+      lastFocused = document.activeElement;
+      title.textContent = label;
+
+      const frame = document.createElement('iframe');
+      // youtube-nocookie: no tracking cookie unless the visitor actually plays.
+      frame.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}`
+        + '?autoplay=1&rel=0&modestbranding=1&playsinline=1';
+      frame.title = label;
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.allowFullscreen = true;
+      stage.replaceChildren(frame);
+
+      lightbox.hidden = false;
+      body.classList.add('lightbox-open');
+      if (state.lenis) state.lenis.stop(); // otherwise the page scrolls behind the player
+      closeBtn.focus({ preventScroll: true });
+    }
+
+    triggers.forEach((trigger) => {
+      trigger.addEventListener('click', (event) => {
+        // Let modified clicks (new tab/window) fall through to the real link.
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+        event.preventDefault();
+        open(trigger.dataset.video, trigger.dataset.videoTitle || trigger.querySelector('.mc-frame__client')?.textContent || 'MooCow Productions');
+      });
+    });
+
+    lightbox.addEventListener('click', (event) => {
+      if (event.target.closest('[data-close]')) close();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') close();
+      if (event.key !== 'Tab' || lightbox.hidden) return;
+      // Keep focus inside the dialog, but cycle through the player as well as
+      // the close button — trapping on the button alone would put the video's
+      // own controls out of reach of the keyboard.
+      const stops = [closeBtn, stage.querySelector('iframe')].filter(Boolean);
+      const at = stops.indexOf(document.activeElement);
+      const next = (at + (event.shiftKey ? -1 : 1) + stops.length) % stops.length;
+      event.preventDefault();
+      stops[at === -1 ? 0 : next].focus({ preventScroll: true });
+    });
+  }
+
   /* ---------- Back to top ---------- */
   function initBackToTop() {
     document.getElementById('toTop')?.addEventListener('click', () => {
@@ -560,6 +628,7 @@
   initCursor();
   initCardTilt();
   initCallSheet();
+  initLightbox();
   initBackToTop();
   initHero();
 
