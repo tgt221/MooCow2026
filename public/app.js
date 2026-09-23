@@ -430,6 +430,37 @@
     const submitLabel = submit.querySelector('span');
     const required = [...form.querySelectorAll('[data-required]')];
 
+    // Spam defences, in order of how much they inconvenience a real visitor:
+    //  1. honeypot  — an invisible field; only bots fill it (already in markup)
+    //  2. time trap — stamp load time; the server rejects instant submissions
+    //  3. Turnstile — Cloudflare's human check, mounted only if a site key is
+    //     configured on the server. Nothing here runs when it isn't.
+    const loadedAt = form.querySelector('#loadedAt');
+    if (loadedAt) loadedAt.value = String(Date.now());
+
+    let turnstileReady = false;
+    const turnstileBox = document.getElementById('turnstileBox');
+
+    fetch('/api/config')
+      .then((r) => r.json())
+      .then((config) => {
+        if (!config.turnstileSiteKey || !turnstileBox) return;
+        turnstileBox.hidden = false;
+        window.onTurnstileLoad = () => {
+          window.turnstile.render(turnstileBox, {
+            sitekey: config.turnstileSiteKey,
+            theme: 'light',
+            callback: () => { turnstileReady = true; }
+          });
+        };
+        const s = document.createElement('script');
+        s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad';
+        s.async = true;
+        s.defer = true;
+        document.head.appendChild(s);
+      })
+      .catch(() => { /* no config endpoint: honeypot + time trap still apply */ });
+
     // Arriving from a service page (/?service=…&package=…#contact): tick the
     // matching service and note the package, so the visitor doesn't have to
     // repeat what they just chose.
@@ -470,6 +501,13 @@
         note.classList.add('is-error');
         note.textContent = 'Please fill in the highlighted fields.';
         form.querySelector('[aria-invalid="true"]')?.focus();
+        return;
+      }
+
+      // Only blocks when Turnstile is actually configured and not yet solved.
+      if (turnstileBox && !turnstileBox.hidden && !turnstileReady) {
+        note.classList.add('is-error');
+        note.textContent = 'Please complete the "I am human" check above the button.';
         return;
       }
 

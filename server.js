@@ -19,7 +19,9 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
+      // challenges.cloudflare.com = Turnstile (the "I am human" check).
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net', 'https://challenges.cloudflare.com'],
+      frameSrc: ["'self'", 'https://challenges.cloudflare.com'],
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com'],
       // All media is self-hosted now; nothing loads from the old WordPress site.
@@ -77,6 +79,31 @@ app.use(express.static(publicDir, {
   }
 }));
 
+// Tells the page whether a human check is configured. The site key is public
+// by design; the secret never leaves the server.
+app.get('/api/config', (req, res) => {
+  res.json({ turnstileSiteKey: process.env.TURNSTILE_SITE_KEY || null });
+});
+
+/**
+ * Cloudflare Turnstile verification. Returns true when no secret is set, so
+ * the form keeps working until the keys are added.
+ */
+async function passesHumanCheck(token, ip) {
+  if (!process.env.TURNSTILE_SECRET_KEY) return true;
+  if (!token) return false;
+  try {
+    const body = new URLSearchParams({ secret: process.env.TURNSTILE_SECRET_KEY, response: token });
+    if (ip) body.set('remoteip', ip);
+    const verify = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', { method: 'POST', body });
+    const result = await verify.json();
+    return result.success === true;
+  } catch (error) {
+    console.error('[turnstile:error]', error?.message || 'verification failed');
+    return false; // fail closed: a broken check must not become an open door
+  }
+}
+
 function clean(value, max = 2000) {
   return String(value ?? '').trim().replace(/\0/g, '').slice(0, max);
 }
@@ -126,8 +153,24 @@ app.post('/api/contact', contactRateLimit, async (req, res) => {
   const fullName = `${body.first} ${body.last}`.trim();
   const thanks = `Got it, ${body.first || 'thanks'} — we'll be in touch shortly.`;
 
+  // 1. Honeypot. Answer as if it worked so the bot doesn't retry, but send nothing.
   if (body.nickname) {
+    console.info('[contact:blocked] honeypot filled');
     return res.json({ ok: true, message: thanks });
+  }
+
+  // 2. Time trap. No human completes this form in under three seconds.
+  //    A missing/garbled stamp is treated as suspicious too.
+  const elapsed = Date.now() - Number.parseInt(req.body.loadedAt, 10);
+  if (!Number.isFinite(elapsed) || elapsed < 3000) {
+    console.info(`[contact:blocked] time trap (${Number.isFinite(elapsed) ? elapsed + 'ms' : 'no stamp'})`);
+    return res.json({ ok: true, message: thanks });
+  }
+
+  // 3. Turnstile, when configured.
+  if (!(await passesHumanCheck(req.body['cf-turnstile-response'], req.ip))) {
+    console.info('[contact:blocked] human check failed');
+    return res.status(400).json({ ok: false, message: "Please complete the “I am human” check and try again." });
   }
 
   if (!body.first || !body.last || !validEmail(body.email)) {

@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css?v=20260911i">
+  <link rel="stylesheet" href="/styles.css?v=20260922b">
   <!-- The badge appears in the loader, so fetch it before anything else paints. -->
   <link rel="preload" as="image" href="/brand/moocow-badge.webp" type="image/webp" fetchpriority="high">
   <script>document.documentElement.classList.remove('no-js');document.documentElement.classList.add('js');</script>
@@ -357,7 +357,14 @@
 
           <div class="mc-honeypot" aria-hidden="true">
             <label for="nickname">Leave this empty</label><input id="nickname" name="nickname" type="text" tabindex="-1" autocomplete="off">
+            <!-- Time trap: app.js stamps this on load. A form submitted in under
+                 3 seconds was filled by a script, not a person. -->
+            <input id="loadedAt" name="loadedAt" type="hidden" value="">
           </div>
+
+          <!-- Cloudflare Turnstile mounts here, but only when TURNSTILE_SITE_KEY
+               is set on the server. Without it the form works exactly as before. -->
+          <div class="mc-turnstile" id="turnstileBox" hidden></div>
 
           <button type="submit" class="mc-submit"><span>Roll camera — send it</span><i aria-hidden="true">↗</i></button>
           <p class="mc-note" id="csNote" role="status" aria-live="polite"></p>
@@ -390,6 +397,6 @@
   <div class="mc-grain" aria-hidden="true"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.11/dist/lenis.min.js" defer></script>
-  <script src="/app.js?v=20260911a" defer></script>
+  <script src="/app.js?v=20260922a" defer></script>
 </body>
 </html>

@@ -17,6 +17,12 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* The `hidden` attribute must always win. Any author rule that sets `display`
+   (e.g. `.sp-draft { display: inline-block }`) silently beats the UA
+   stylesheet, which leaves supposedly-hidden elements on screen — that is how
+   the local-only pricing note reached the live site. */
+[hidden] { display: none !important; }
+
 html {
   background: var(--black);
   color-scheme: dark;
@@ -1582,3 +1588,6 @@ body.is-past-hero .mc-grain { opacity: .09; }
   .sp-lane__list,
   .sp-lanes--3 .sp-lane__list { columns: 1; }
 }
+
+/* Turnstile ("I am human" check) — only visible when keys are configured. */
+.mc-turnstile { margin: .4rem 0 -.4rem; }
